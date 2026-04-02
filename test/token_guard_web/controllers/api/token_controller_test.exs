@@ -18,15 +18,15 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
   end
 
-  describe "activate" do
+  describe "register" do
     setup do
       Tokens.create_tokens(100)
       :ok
     end
 
-    test "activates a token and returns token_id and user_id", %{conn: conn} do
+    test "registers a token and returns token_id and user_id", %{conn: conn} do
       user_id = Ecto.UUID.generate()
-      conn = post(conn, ~p"/api/tokens/activate", user_id: user_id)
+      conn = post(conn, ~p"/api/tokens/register", user_id: user_id)
 
       response = json_response(conn, 200)
       assert response["token_id"] != nil
@@ -34,13 +34,13 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
 
     test "returns error when missing user_id", %{conn: conn} do
-      conn = post(conn, ~p"/api/tokens/activate")
+      conn = post(conn, ~p"/api/tokens/register")
 
       assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["is required"]}}
     end
 
     test "returns error when user_id is not a valid UUID", %{conn: conn} do
-      conn = post(conn, ~p"/api/tokens/activate", user_id: "not-a-uuid")
+      conn = post(conn, ~p"/api/tokens/register", user_id: "not-a-uuid")
 
       assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["must be a valid UUID"]}}
     end
@@ -54,7 +54,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
       assert Tokens.list_active_tokens() != []
 
-      conn = post(conn, ~p"/api/tokens/activate", user_id: user_id)
+      conn = post(conn, ~p"/api/tokens/register", user_id: user_id)
 
       response = json_response(conn, 200)
       assert is_binary(response["token_id"])

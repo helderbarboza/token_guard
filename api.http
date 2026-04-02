@@ -9,12 +9,12 @@
 
 ###
 
-# Activate a token
+# Register a token (activate for a user)
 # Required: user_id (must be a valid UUID)
 # Returns: token_id and user_id
 # Uses FIFO (first available token by inserted_at)
-# @name activateToken
-POST {{baseUrl}}/tokens/activate
+# @name registerToken
+POST {{baseUrl}}/tokens/register
 Content-Type: application/json
 
 {

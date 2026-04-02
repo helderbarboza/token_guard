@@ -23,7 +23,7 @@ defmodule TokenGuardWeb.Router do
   scope "/api", TokenGuardWeb.API do
     pipe_through :api
 
-    post "/tokens/activate", TokenController, :activate
+    post "/tokens/register", TokenController, :activate
     get "/tokens", TokenController, :index
     get "/tokens/:id", TokenController, :show
     get "/tokens/:id/history", TokenController, :history
