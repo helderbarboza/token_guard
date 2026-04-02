@@ -147,6 +147,8 @@ defmodule TokenGuard.Tokens do
     Enum.each(active, fn token ->
       release_token(token)
     end)
+
+    length(active)
   end
 
   def create_tokens(count) do
