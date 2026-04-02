@@ -15,7 +15,7 @@ TokenGuard is a **token pool management API** that manages a pool of pre-generat
 
 - **Token Pool**: Pre-configured pool of 100 tokens (easily scalable)
 - **FIFO Allocation**: Tokens are allocated in first-in-first-out order
-- **Automatic Expiration**: Tokens automatically expire after 2 minutes of inactivity
+- **Automatic Expiration**: Tokens automatically expire after 2 minutes from activation time
 - **Usage History**: Full audit trail of token usage with start/end timestamps
 - **Admin Controls**: Endpoints to release all active tokens instantly
 - **Background Processing**: Oban-powered background job for token cleanup
@@ -30,13 +30,20 @@ TokenGuard is a **token pool management API** that manages a pool of pre-generat
 
 ### Installation
 
-1. **Clone and install dependencies:**
+1. **Install all dependencies and setup the project:**
 
 ```bash
-mix deps.get
+mix setup
 ```
 
-2. **Configure the database:**
+This will:
+- Install Elixir dependencies (`mix deps.get`)
+- Create the database
+- Run migrations
+- Seed 100 tokens
+- Setup and build frontend assets
+
+2. **Configure the database (if needed):**
 
 Update `config/dev.exs` with your PostgreSQL credentials:
 
@@ -48,18 +55,7 @@ config :token_guard, TokenGuard.Repo,
   database: "token_guard_dev"
 ```
 
-3. **Setup the database and seed tokens:**
-
-```bash
-mix ecto.setup
-```
-
-This will:
-- Create the database
-- Run migrations
-- Seed 100 tokens
-
-4. **Start the server:**
+3. **Start the server:**
 
 ```bash
 mix phx.server
@@ -71,7 +67,7 @@ Or run in interactive mode:
 iex -S mix phx.server
 ```
 
-5. **Visit the API at** [`http://localhost:4000`](http://localhost:4000)
+4. **Visit the API at** [`http://localhost:4000`](http://localhost:4000)
 
 ### Development Tools
 
@@ -313,6 +309,14 @@ GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479
 }
 ```
 
+**Error Response (400) - Invalid UUID format:**
+
+```json
+{
+  "error": "not_found"
+}
+```
+
 ---
 
 ### Get Token History (`GET /api/tokens/:id/history`)
@@ -432,6 +436,15 @@ DELETE /api/tokens/active
 {
   "message": "3 token(s) released",
   "released_count": 3
+}
+```
+
+**Response (no active tokens):**
+
+```json
+{
+  "message": "0 token(s) released",
+  "released_count": 0
 }
 ```
 
