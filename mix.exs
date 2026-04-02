@@ -65,7 +65,8 @@ defmodule TokenGuard.MixProject do
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.0"},
-      {:uuid, "~> 1.1"}
+      {:uuid, "~> 1.1"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -85,7 +86,7 @@ defmodule TokenGuard.MixProject do
         "esbuild token_guard --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "credo", "test"]
     ]
   end
 end
