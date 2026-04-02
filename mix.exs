@@ -64,7 +64,6 @@ defmodule TokenGuard.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.0"},
@@ -73,9 +72,6 @@ defmodule TokenGuard.MixProject do
   end
 
   # Aliases are shortcuts or tasks specific to the current project.
-  # For example, to install project dependencies and perform other setup tasks, run:
-  #
-  #     $ mix setup
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
