@@ -6,15 +6,15 @@ defmodule TokenGuard.Tokens.SchemaTest do
 
   describe "Token changeset" do
     test "creates valid changeset with required fields" do
-      token = %Token{id: Ecto.UUID.generate(), status: "available"}
-      changeset = Token.changeset(token, %{id: Ecto.UUID.generate(), status: "available"})
+      token = %Token{id: Ecto.UUID.generate(), status: :available}
+      changeset = Token.changeset(token, %{id: Ecto.UUID.generate(), status: :available})
 
       assert changeset.valid?
     end
 
     test "validates status is either available or active" do
-      token = %Token{id: Ecto.UUID.generate(), status: "available"}
-      changeset = Token.changeset(token, %{id: Ecto.UUID.generate(), status: "invalid"})
+      token = %Token{id: Ecto.UUID.generate(), status: :available}
+      changeset = Token.changeset(token, %{id: Ecto.UUID.generate(), status: :invalid})
 
       refute changeset.valid?
       assert "is invalid" in changeset_errors(changeset).status

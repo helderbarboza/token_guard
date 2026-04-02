@@ -73,7 +73,7 @@ iex -S mix phx.server
 
 - **LiveDashboard**: [`http://localhost:4000/dev/dashboard`](http://localhost:4000/dev/dashboard)
 - **Oban Dashboard**: [`http://localhost:4000/dev/oban`](http://localhost:4000/dev/oban)
-- **HTTP Client**: Use [`api.http`](./api.http) for VS Code REST Client to test the API endpoints
+- **HTTP Client**: Use [`api.http`](./api.http) with [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) for VS Code to test the API endpoints.
 
 ## API Reference
 

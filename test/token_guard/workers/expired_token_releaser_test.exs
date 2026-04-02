@@ -6,23 +6,26 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
   alias TokenGuard.Tokens
   alias TokenGuard.Workers.ExpiredTokenReleaser
 
+  @token_lifetime_ms Application.compile_env(:token_guard, :token_lifetime, :timer.minutes(2))
+  @expired_offset_seconds div(@token_lifetime_ms, 1000) + 10
+
   describe "perform/1" do
     setup do
       Tokens.create_tokens(100)
       :ok
     end
 
-    test "releases tokens that have been active for more than 2 minutes" do
+    test "releases tokens that have been active for more than token lifetime" do
       {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
       assert token.status == :active
 
-      yesterday = DateTime.add(DateTime.utc_now(:second), -130, :second)
+      expired_time = DateTime.add(DateTime.utc_now(:second), -@expired_offset_seconds, :second)
 
       TokenGuard.Tokens.TokenUsage
       |> where(token_id: ^activation.token_id)
-      |> TokenGuard.Repo.update_all(set: [started_at: yesterday])
+      |> TokenGuard.Repo.update_all(set: [started_at: expired_time])
 
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
 
@@ -30,7 +33,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       assert updated_token.status == :available
     end
 
-    test "does not release tokens active for less than 2 minutes" do
+    test "does not release tokens active for less than token lifetime" do
       {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
@@ -47,12 +50,12 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       {:ok, activation2} = Tokens.activate_token(Ecto.UUID.generate())
       {:ok, activation3} = Tokens.activate_token(Ecto.UUID.generate())
 
-      yesterday = DateTime.add(DateTime.utc_now(:second), -130, :second)
+      expired_time = DateTime.add(DateTime.utc_now(:second), -@expired_offset_seconds, :second)
 
       for act <- [activation1, activation2, activation3] do
         TokenGuard.Tokens.TokenUsage
         |> where(token_id: ^act.token_id)
-        |> TokenGuard.Repo.update_all(set: [started_at: yesterday])
+        |> TokenGuard.Repo.update_all(set: [started_at: expired_time])
       end
 
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})

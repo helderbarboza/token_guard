@@ -70,7 +70,7 @@ defmodule TokenGuard.TokensTest do
       assert first_token.inserted_at <= second_token.inserted_at
     end
 
-    test "cannot activate more than 100 tokens" do
+    test "activating 101st token reuses oldest active token via FIFO" do
       Tokens.release_all_active_tokens()
 
       for _n <- 1..100 do
@@ -80,9 +80,13 @@ defmodule TokenGuard.TokensTest do
       active_count = length(Tokens.list_active_tokens())
       assert active_count == 100
 
+      oldest_before = List.first(Tokens.list_active_tokens())
+
       {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
 
       assert result.token_id != nil
+      oldest_after = Tokens.get_token!(oldest_before.id)
+      assert oldest_after.status == :available
     end
 
     test "activating 101st token releases oldest active token" do
@@ -115,8 +119,6 @@ defmodule TokenGuard.TokensTest do
 
       token = Tokens.get_token!(token_id)
       Tokens.release_token(token)
-
-      Process.sleep(50)
 
       available_tokens = Tokens.list_available_tokens()
       same_token = Enum.find(available_tokens, fn t -> t.id == token_id end)

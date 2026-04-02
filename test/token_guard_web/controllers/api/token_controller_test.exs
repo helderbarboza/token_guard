@@ -45,20 +45,25 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
       assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["must be a valid UUID"]}}
     end
 
-    test "returns error when max active tokens reached", %{conn: conn} do
+    test "101st activation reuses oldest token via FIFO", %{conn: conn} do
       user_id = Ecto.UUID.generate()
 
       for _idx <- 1..100 do
         Tokens.activate_token(user_id)
       end
 
-      assert Tokens.list_active_tokens() != []
+      assert length(Tokens.list_active_tokens()) == 100
+
+      oldest_before = List.first(Tokens.list_active_tokens())
 
       conn = post(conn, ~p"/api/tokens/register", user_id: user_id)
 
       response = json_response(conn, 200)
       assert is_binary(response["token_id"])
       assert is_binary(response["user_id"])
+
+      oldest_after = Tokens.get_token!(oldest_before.id)
+      assert oldest_after.status == :available
     end
   end
 
