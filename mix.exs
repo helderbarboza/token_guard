@@ -12,7 +12,8 @@ defmodule TokenGuard.MixProject do
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
-      test_coverage: [tool: ExCoveralls]
+      test_coverage: [tool: ExCoveralls],
+      dialyzer: [ignore_warnings: ".dialyzer_ignore.exs"]
     ]
   end
 
@@ -76,6 +77,7 @@ defmodule TokenGuard.MixProject do
       {:uuid, "~> 1.1"},
       {:typed_ecto_schema, "~> 0.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:excoveralls, "~> 0.18", only: :test, runtime: false}
     ]
   end
@@ -101,6 +103,7 @@ defmodule TokenGuard.MixProject do
         "deps.unlock --unused",
         "format",
         "credo --strict",
+        "dialyzer",
         "test"
       ]
     ]
