@@ -58,16 +58,14 @@ defmodule TokenGuard.MixProject do
        app: false,
        compile: false,
        depth: 1},
-      {:swoosh, "~> 1.16"},
-      {:req, "~> 0.5"},
-      {:telemetry_metrics, "~> 1.0"},
-      {:telemetry_poller, "~> 1.0"},
-      {:gettext, "~> 1.0"},
-      {:jason, "~> 1.2"},
-      {:bandit, "~> 1.5"},
-      {:oban, "~> 2.0"},
-      {:oban_web, "~> 2.0"},
-      {:uuid, "~> 1.1"}
+       {:telemetry_metrics, "~> 1.0"},
+       {:telemetry_poller, "~> 1.0"},
+       {:gettext, "~> 1.0"},
+       {:jason, "~> 1.2"},
+       {:bandit, "~> 1.5"},
+       {:oban, "~> 2.0"},
+       {:oban_web, "~> 2.0"},
+       {:uuid, "~> 1.1"}
     ]
   end
 

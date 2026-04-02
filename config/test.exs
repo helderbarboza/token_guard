@@ -20,12 +20,6 @@ config :token_guard, TokenGuardWeb.Endpoint,
   secret_key_base: "XfNrEGISJW6rP7iqE4UafJNO8O6ONJScq0h05z8baBXqij9DCuauT/ubJb4gf0d+",
   server: false
 
-# In test we don't send emails
-config :token_guard, TokenGuard.Mailer, adapter: Swoosh.Adapters.Test
-
-# Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 
