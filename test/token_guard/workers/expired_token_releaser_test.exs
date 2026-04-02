@@ -16,7 +16,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       {:ok, activation} = Tokens.activate_token()
       token = Tokens.get_token!(activation.token_id)
 
-      assert token.status == "active"
+      assert token.status == :active
 
       yesterday = DateTime.add(DateTime.utc_now(:second), -130, :second)
 
@@ -27,19 +27,19 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
 
       updated_token = Tokens.get_token!(activation.token_id)
-      assert updated_token.status == "available"
+      assert updated_token.status == :available
     end
 
     test "does not release tokens active for less than 2 minutes" do
       {:ok, activation} = Tokens.activate_token()
       token = Tokens.get_token!(activation.token_id)
 
-      assert token.status == "active"
+      assert token.status == :active
 
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
 
       updated_token = Tokens.get_token!(activation.token_id)
-      assert updated_token.status == "active"
+      assert updated_token.status == :active
     end
 
     test "releases multiple expired tokens" do

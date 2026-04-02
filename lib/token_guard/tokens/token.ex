@@ -8,21 +8,20 @@ defmodule TokenGuard.Tokens.Token do
 
   @primary_key {:id, :binary_id, autogenerate: false}
 
+  @status_values [:available, :active]
+
   typed_schema "tokens" do
-    field :status, :string, default: "available", null: false
+    field :status, Ecto.Enum, values: @status_values, default: :available, null: false
 
     has_many :usages, TokenGuard.Tokens.TokenUsage, foreign_key: :token_id
 
     timestamps(type: :utc_datetime)
   end
 
-  def status(:available), do: "available"
-  def status(:active), do: "active"
-
   def changeset(token, attrs) do
     token
     |> cast(attrs, [:id, :status])
     |> validate_required([:id, :status])
-    |> validate_inclusion(:status, ["available", "active"])
+    |> validate_inclusion(:status, @status_values)
   end
 end

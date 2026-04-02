@@ -24,7 +24,7 @@ defmodule TokenGuard.Tokens do
   @spec list_available_tokens() :: [Token.t()]
   def list_available_tokens do
     Token
-    |> where(status: "available")
+    |> where(status: :available)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
@@ -32,7 +32,7 @@ defmodule TokenGuard.Tokens do
   @spec list_active_tokens() :: [Token.t()]
   def list_active_tokens do
     Token
-    |> where(status: "active")
+    |> where(status: :active)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
   end
@@ -88,7 +88,7 @@ defmodule TokenGuard.Tokens do
 
   defp fetch_available_token do
     Token
-    |> where(status: "available")
+    |> where(status: :available)
     |> order_by(asc: :inserted_at)
     |> limit(1)
     |> Repo.one()
@@ -106,7 +106,7 @@ defmodule TokenGuard.Tokens do
     }
 
     token
-    |> Ecto.Changeset.change(status: "active")
+    |> Ecto.Changeset.change(status: :active)
     |> Repo.update!()
 
     Repo.insert!(usage)
@@ -116,7 +116,7 @@ defmodule TokenGuard.Tokens do
 
   defp release_oldest_active_token do
     Token
-    |> where(status: "active")
+    |> where(status: :active)
     |> order_by(asc: :inserted_at)
     |> limit(1)
     |> Repo.one()
@@ -128,7 +128,7 @@ defmodule TokenGuard.Tokens do
     now = DateTime.utc_now(:second)
 
     token
-    |> Ecto.Changeset.change(status: "available")
+    |> Ecto.Changeset.change(status: :available)
     |> Repo.update!()
 
     TokenUsage
@@ -179,7 +179,7 @@ defmodule TokenGuard.Tokens do
       for _n <- 1..count do
         %{
           id: generate_uuid(),
-          status: "available",
+          status: :available,
           inserted_at: now,
           updated_at: now
         }

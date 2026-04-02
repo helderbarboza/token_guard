@@ -17,7 +17,7 @@ defmodule TokenGuard.TokensTest do
 
     test "all tokens start as available" do
       tokens = Tokens.list_tokens()
-      assert Enum.all?(tokens, fn t -> t.status == "available" end)
+      assert Enum.all?(tokens, fn t -> t.status == :available end)
     end
 
     test "all tokens have unique UUIDs" do
@@ -46,7 +46,7 @@ defmodule TokenGuard.TokensTest do
       {:ok, result} = Tokens.activate_token()
       token = Tokens.get_token!(result.token_id)
 
-      assert token.status == "active"
+      assert token.status == :active
     end
 
     test "activating a token creates a usage record" do
@@ -97,7 +97,7 @@ defmodule TokenGuard.TokensTest do
       {:ok, _result} = Tokens.activate_token()
 
       old_token = Tokens.get_token!(oldest_id)
-      assert old_token.status == "available"
+      assert old_token.status == :available
     end
   end
 
@@ -163,7 +163,7 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_token(token)
 
       updated_token = Tokens.get_token!(activation.token_id)
-      assert updated_token.status == "available"
+      assert updated_token.status == :available
     end
 
     test "releasing a token sets ended_at on usage" do
@@ -205,7 +205,7 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_expired_tokens()
 
       updated_token = Tokens.get_token!(activation.token_id)
-      assert updated_token.status == "available"
+      assert updated_token.status == :available
     end
 
     test "token auto-release does NOT release tokens active for < 2 minutes" do
@@ -214,7 +214,7 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_expired_tokens()
 
       token = Tokens.get_token!(activation.token_id)
-      assert token.status == "active"
+      assert token.status == :active
     end
   end
 
@@ -234,7 +234,7 @@ defmodule TokenGuard.TokensTest do
 
       available = Tokens.list_available_tokens()
       assert length(available) == 98
-      assert Enum.all?(available, fn t -> t.status == "available" end)
+      assert Enum.all?(available, fn t -> t.status == :available end)
     end
 
     test "list_active_tokens returns only active tokens" do
@@ -244,7 +244,7 @@ defmodule TokenGuard.TokensTest do
 
       active = Tokens.list_active_tokens()
       assert length(active) == 3
-      assert Enum.all?(active, fn t -> t.status == "active" end)
+      assert Enum.all?(active, fn t -> t.status == :active end)
     end
   end
 end
