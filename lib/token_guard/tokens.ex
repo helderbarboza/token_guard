@@ -73,13 +73,14 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
-  @spec activate_token() :: {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
-  def activate_token do
+  @spec activate_token(user_id()) ::
+          {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
+  def activate_token(user_id) do
     Repo.transaction(fn ->
       token = fetch_available_token() || release_oldest_active_token()
 
       if token do
-        activate_token_record(token)
+        activate_token_record(token, user_id)
       else
         Repo.rollback(:no_tokens_available)
       end
@@ -94,8 +95,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
-  defp activate_token_record(token) do
-    user_id = generate_uuid()
+  defp activate_token_record(token, user_id) do
     now = DateTime.utc_now(:second)
 
     usage = %TokenUsage{

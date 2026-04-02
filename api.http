@@ -9,11 +9,16 @@
 ###
 
 # Activate a token
+# Required: user_id (must be a valid UUID)
 # Returns: token_id and user_id
 # Uses FIFO (first available token by inserted_at)
 # @name activateToken
 POST {{baseUrl}}/tokens/activate
 Content-Type: application/json
+
+{
+  "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
 
 ###
 

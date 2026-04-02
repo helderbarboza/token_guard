@@ -3,15 +3,34 @@ defmodule TokenGuardWeb.API.TokenController do
 
   alias TokenGuard.Tokens
 
-  def activate(conn, _params) do
-    case Tokens.activate_token() do
-      {:ok, result} ->
-        json(conn, %{token_id: result.token_id, user_id: result.user_id})
+  def activate(conn, %{"user_id" => user_id}) do
+    if valid_uuid?(user_id) do
+      case Tokens.activate_token(user_id) do
+        {:ok, result} ->
+          json(conn, %{token_id: result.token_id, user_id: result.user_id})
 
-      {:error, reason} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{error: Atom.to_string(reason)})
+        {:error, reason} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{error: Atom.to_string(reason)})
+      end
+    else
+      conn
+      |> put_status(:bad_request)
+      |> json(%{error: "user_id must be a valid UUID"})
+    end
+  end
+
+  def activate(conn, _params) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "user_id is required"})
+  end
+
+  defp valid_uuid?(string) do
+    case Ecto.UUID.cast(string) do
+      {:ok, _uuid} -> true
+      :error -> false
     end
   end
 

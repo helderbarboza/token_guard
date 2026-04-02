@@ -34,7 +34,8 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "activating a token returns token_id and user_id" do
-      {:ok, result} = Tokens.activate_token()
+      user_id = Ecto.UUID.generate()
+      {:ok, result} = Tokens.activate_token(user_id)
 
       assert result.token_id != nil
       assert result.user_id != nil
@@ -43,14 +44,14 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "activating a token changes its status to active" do
-      {:ok, result} = Tokens.activate_token()
+      {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(result.token_id)
 
       assert token.status == :active
     end
 
     test "activating a token creates a usage record" do
-      {:ok, result} = Tokens.activate_token()
+      {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
       usage = Tokens.get_active_usage_for_token(result.token_id)
 
       assert usage != nil
@@ -60,8 +61,8 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "activating multiple tokens uses FIFO order" do
-      {:ok, first} = Tokens.activate_token()
-      {:ok, second} = Tokens.activate_token()
+      {:ok, first} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, second} = Tokens.activate_token(Ecto.UUID.generate())
 
       first_token = Tokens.get_token!(first.token_id)
       second_token = Tokens.get_token!(second.token_id)
@@ -73,13 +74,13 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_all_active_tokens()
 
       for _n <- 1..100 do
-        {:ok, _result} = Tokens.activate_token()
+        {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
       end
 
       active_count = length(Tokens.list_active_tokens())
       assert active_count == 100
 
-      {:ok, result} = Tokens.activate_token()
+      {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
 
       assert result.token_id != nil
     end
@@ -88,13 +89,13 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_all_active_tokens()
 
       for _n <- 1..100 do
-        {:ok, _result} = Tokens.activate_token()
+        {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
       end
 
       oldest_active = List.first(Tokens.list_active_tokens())
       oldest_id = oldest_active.id
 
-      {:ok, _result} = Tokens.activate_token()
+      {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
 
       old_token = Tokens.get_token!(oldest_id)
       assert old_token.status == :available
@@ -108,7 +109,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "a token can have multiple users in its history" do
-      {:ok, first_activation} = Tokens.activate_token()
+      {:ok, first_activation} = Tokens.activate_token(Ecto.UUID.generate())
       token_id = first_activation.token_id
       first_user_id = first_activation.user_id
 
@@ -121,7 +122,7 @@ defmodule TokenGuard.TokensTest do
       same_token = Enum.find(available_tokens, fn t -> t.id == token_id end)
       assert same_token != nil, "Released token should be available again"
 
-      {:ok, _result} = Tokens.activate_token()
+      {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
 
       history = Tokens.get_token_history(token_id)
       user_ids = Enum.map(history, fn u -> u.user_identifier end)
@@ -130,7 +131,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "only one active user at a time" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token_id = activation.token_id
 
       active_usage = Tokens.get_active_usage_for_token(token_id)
@@ -139,7 +140,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "history shows ended_at for released users" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token_id = activation.token_id
 
       Tokens.release_token(Tokens.get_token!(token_id))
@@ -157,7 +158,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "releasing a token changes status to available" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
       Tokens.release_token(token)
@@ -167,7 +168,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "releasing a token sets ended_at on usage" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
       Tokens.release_token(token)
@@ -181,9 +182,9 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "release_all_active_tokens releases all active tokens" do
-      Tokens.activate_token()
-      Tokens.activate_token()
-      Tokens.activate_token()
+      Tokens.activate_token(Ecto.UUID.generate())
+      Tokens.activate_token(Ecto.UUID.generate())
+      Tokens.activate_token(Ecto.UUID.generate())
 
       assert length(Tokens.list_active_tokens()) == 3
 
@@ -194,7 +195,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "releasing expired tokens releases tokens active for > 2 minutes" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token_id = activation.token_id
 
       yesterday = DateTime.add(DateTime.utc_now(), -121, :second)
@@ -209,7 +210,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "token auto-release does NOT release tokens active for < 2 minutes" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
 
       Tokens.release_expired_tokens()
 
@@ -229,8 +230,8 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "list_available_tokens returns only available tokens" do
-      Tokens.activate_token()
-      Tokens.activate_token()
+      Tokens.activate_token(Ecto.UUID.generate())
+      Tokens.activate_token(Ecto.UUID.generate())
 
       available = Tokens.list_available_tokens()
       assert length(available) == 98
@@ -238,9 +239,9 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "list_active_tokens returns only active tokens" do
-      Tokens.activate_token()
-      Tokens.activate_token()
-      Tokens.activate_token()
+      Tokens.activate_token(Ecto.UUID.generate())
+      Tokens.activate_token(Ecto.UUID.generate())
+      Tokens.activate_token(Ecto.UUID.generate())
 
       active = Tokens.list_active_tokens()
       assert length(active) == 3

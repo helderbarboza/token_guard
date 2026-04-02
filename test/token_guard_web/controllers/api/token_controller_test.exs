@@ -25,21 +25,36 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
 
     test "activates a token and returns token_id and user_id", %{conn: conn} do
-      conn = post(conn, ~p"/api/tokens/activate")
+      user_id = Ecto.UUID.generate()
+      conn = post(conn, ~p"/api/tokens/activate", user_id: user_id)
 
       response = json_response(conn, 200)
-      assert is_binary(response["token_id"])
-      assert is_binary(response["user_id"])
+      assert response["token_id"] != nil
+      assert response["user_id"] == user_id
+    end
+
+    test "returns error when missing user_id", %{conn: conn} do
+      conn = post(conn, ~p"/api/tokens/activate")
+
+      assert json_response(conn, 400) == %{"error" => "user_id is required"}
+    end
+
+    test "returns error when user_id is not a valid UUID", %{conn: conn} do
+      conn = post(conn, ~p"/api/tokens/activate", user_id: "not-a-uuid")
+
+      assert json_response(conn, 400) == %{"error" => "user_id must be a valid UUID"}
     end
 
     test "returns error when max active tokens reached", %{conn: conn} do
+      user_id = Ecto.UUID.generate()
+
       for _idx <- 1..100 do
-        {:ok, _activation} = Tokens.activate_token()
+        Tokens.activate_token(user_id)
       end
 
       assert Tokens.list_active_tokens() != []
 
-      conn = post(conn, ~p"/api/tokens/activate")
+      conn = post(conn, ~p"/api/tokens/activate", user_id: user_id)
 
       response = json_response(conn, 200)
       assert is_binary(response["token_id"])
@@ -67,7 +82,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
 
     test "returns token info with active user when active", %{conn: conn} do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
 
       conn = get(conn, ~p"/api/tokens/#{activation.token_id}")
 
@@ -102,9 +117,9 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
 
     test "returns usage history for token", %{conn: conn} do
-      {:ok, activation1} = Tokens.activate_token()
+      {:ok, activation1} = Tokens.activate_token(Ecto.UUID.generate())
       Tokens.release_token(Tokens.get_token!(activation1.token_id))
-      {:ok, activation2} = Tokens.activate_token()
+      {:ok, activation2} = Tokens.activate_token(Ecto.UUID.generate())
 
       conn = get(conn, ~p"/api/tokens/#{activation2.token_id}/history")
 
@@ -126,9 +141,9 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     end
 
     test "releases all active tokens", %{conn: conn} do
-      {:ok, _activation1} = Tokens.activate_token()
-      {:ok, _activation2} = Tokens.activate_token()
-      {:ok, _activation3} = Tokens.activate_token()
+      {:ok, _activation1} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, _activation2} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, _activation3} = Tokens.activate_token(Ecto.UUID.generate())
 
       assert Tokens.list_active_tokens() != []
 

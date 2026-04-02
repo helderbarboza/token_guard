@@ -13,7 +13,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
     end
 
     test "releases tokens that have been active for more than 2 minutes" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
       assert token.status == :active
@@ -31,7 +31,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
     end
 
     test "does not release tokens active for less than 2 minutes" do
-      {:ok, activation} = Tokens.activate_token()
+      {:ok, activation} = Tokens.activate_token(Ecto.UUID.generate())
       token = Tokens.get_token!(activation.token_id)
 
       assert token.status == :active
@@ -43,9 +43,9 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
     end
 
     test "releases multiple expired tokens" do
-      {:ok, activation1} = Tokens.activate_token()
-      {:ok, activation2} = Tokens.activate_token()
-      {:ok, activation3} = Tokens.activate_token()
+      {:ok, activation1} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, activation2} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, activation3} = Tokens.activate_token(Ecto.UUID.generate())
 
       yesterday = DateTime.add(DateTime.utc_now(:second), -130, :second)
 
