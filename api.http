@@ -5,6 +5,7 @@
 # Tokens are automatically released after 2 minutes of activity.
 
 @baseUrl = http://localhost:4000/api
+@userId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
 ###
 
@@ -17,7 +18,7 @@ POST {{baseUrl}}/tokens/activate
 Content-Type: application/json
 
 {
-  "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  "user_id": {{userId}}
 }
 
 ###
