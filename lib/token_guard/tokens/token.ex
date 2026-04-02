@@ -8,7 +8,7 @@ defmodule TokenGuard.Tokens.Token do
 
   @primary_key {:id, :binary_id, autogenerate: false}
 
-  typed_schema "tokens", opaque: true do
+  typed_schema "tokens" do
     field :status, :string, default: "available", null: false
 
     has_many :usages, TokenGuard.Tokens.TokenUsage, foreign_key: :token_id
