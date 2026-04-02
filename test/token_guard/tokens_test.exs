@@ -55,7 +55,7 @@ defmodule TokenGuard.TokensTest do
       usage = Tokens.get_active_usage_for_token(result.token_id)
 
       assert usage != nil
-      assert usage.user_identifier == result.user_id
+      assert usage.user_id == result.user_id
       assert usage.started_at != nil
       assert usage.ended_at == nil
     end
@@ -125,7 +125,7 @@ defmodule TokenGuard.TokensTest do
       {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
 
       history = Tokens.get_token_history(token_id)
-      user_ids = Enum.map(history, fn u -> u.user_identifier end)
+      user_ids = Enum.map(history, fn u -> u.user_id end)
 
       assert first_user_id in user_ids
     end
@@ -136,7 +136,7 @@ defmodule TokenGuard.TokensTest do
 
       active_usage = Tokens.get_active_usage_for_token(token_id)
       assert active_usage != nil
-      assert active_usage.user_identifier == activation.user_id
+      assert active_usage.user_id == activation.user_id
     end
 
     test "history shows ended_at for released users" do

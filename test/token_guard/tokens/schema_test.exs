@@ -26,14 +26,14 @@ defmodule TokenGuard.Tokens.SchemaTest do
       usage = %TokenUsage{
         id: Ecto.UUID.generate(),
         token_id: Ecto.UUID.generate(),
-        user_identifier: Ecto.UUID.generate(),
+        user_id: Ecto.UUID.generate(),
         started_at: DateTime.utc_now(:second)
       }
 
       attrs = %{
         id: Ecto.UUID.generate(),
         token_id: Ecto.UUID.generate(),
-        user_identifier: Ecto.UUID.generate(),
+        user_id: Ecto.UUID.generate(),
         started_at: DateTime.utc_now(:second)
       }
 
