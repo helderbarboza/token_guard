@@ -34,5 +34,7 @@ config :phoenix_live_view,
 config :phoenix,
   sort_verified_routes_query_params: true
 
-# Disable Oban in tests - use Oban.Testing for inline job execution
-config :token_guard, Oban, []
+# Configure Oban for inline testing
+config :token_guard, Oban,
+  repo: TokenGuard.Repo,
+  testing: :inline

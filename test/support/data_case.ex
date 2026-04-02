@@ -15,6 +15,7 @@ defmodule TokenGuard.DataCase do
   """
 
   use ExUnit.CaseTemplate
+  use Oban.Testing, repo: TokenGuard.Repo
 
   using do
     quote do
