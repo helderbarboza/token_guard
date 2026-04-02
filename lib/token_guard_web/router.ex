@@ -33,12 +33,14 @@ defmodule TokenGuardWeb.Router do
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:token_guard, :dev_routes) do
     import Phoenix.LiveDashboard.Router
+    import Oban.Web.Router
 
     scope "/dev" do
       pipe_through :browser
 
       live_dashboard "/dashboard", metrics: TokenGuardWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+      oban_dashboard("/oban")
     end
   end
 end
