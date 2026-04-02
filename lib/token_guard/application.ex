@@ -12,11 +12,16 @@ defmodule TokenGuard.Application do
       TokenGuard.Repo,
       {DNSCluster, query: Application.get_env(:token_guard, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TokenGuard.PubSub},
-      # Start a worker by calling: TokenGuard.Worker.start_link(arg)
-      # {TokenGuard.Worker, arg},
-      # Start to serve requests, typically the last entry
       TokenGuardWeb.Endpoint
     ]
+
+    children =
+      if Application.get_env(:token_guard, :start_oban, true) do
+        oban_config = Application.get_env(:token_guard, Oban) || [repo: TokenGuard.Repo]
+        children ++ [{Oban, oban_config}]
+      else
+        children
+      end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

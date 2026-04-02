@@ -67,7 +67,7 @@ config :token_guard, TokenGuardWeb.Endpoint,
     ]
   ]
 
-# Enable dev routes for dashboard and mailbox
+# Enable LiveDashboard and Swoosh mailbox preview in development
 config :token_guard, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
@@ -90,3 +90,11 @@ config :phoenix_live_view,
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+# Oban config (disabled for dev until migrations are added)
+config :token_guard, Oban,
+  repo: TokenGuard.Repo,
+  plugins: [],
+  queues: [default: 10]
+
+config :token_guard, start_oban: false
