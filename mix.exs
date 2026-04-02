@@ -103,7 +103,7 @@ defmodule TokenGuard.MixProject do
         "deps.unlock --unused",
         "format",
         "credo --strict",
-        "dialyzer",
+        "dialyzer --quiet",
         "test"
       ]
     ]
