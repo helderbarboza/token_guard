@@ -60,7 +60,7 @@ defmodule TokenGuard.Tokens do
         nil ->
           case release_oldest_active_token() do
             nil -> Repo.rollback(:no_tokens_available)
-            token -> token
+            token -> activate_token_record(token)
           end
 
         token ->
