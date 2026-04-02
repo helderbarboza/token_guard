@@ -1,10 +1,14 @@
 defmodule TokenGuard.Tokens.TokenUsage do
-  use Ecto.Schema
+  @moduledoc """
+  Schema for tracking token usage history.
+  """
+
+  use TypedEctoSchema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: false}
 
-  schema "token_usages" do
+  typed_schema "token_usages" do
     field :user_identifier, :binary_id
     field :started_at, :utc_datetime
     field :ended_at, :utc_datetime

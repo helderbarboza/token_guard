@@ -1,11 +1,15 @@
 defmodule TokenGuard.Tokens.Token do
-  use Ecto.Schema
+  @moduledoc """
+  Schema for tokens that can be activated for use.
+  """
+
+  use TypedEctoSchema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: false}
 
-  schema "tokens" do
-    field :status, :string, default: "available"
+  typed_schema "tokens" do
+    field :status, :string, default: "available", null: false
 
     has_many :usages, TokenGuard.Tokens.TokenUsage, foreign_key: :token_id
 
