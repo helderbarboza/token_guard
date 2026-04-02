@@ -67,7 +67,7 @@ config :token_guard, TokenGuardWeb.Endpoint,
     ]
   ]
 
-# Enable LiveDashboard and Swoosh mailbox preview in development
+# Enable LiveDashboard in development
 config :token_guard, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
