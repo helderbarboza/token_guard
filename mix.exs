@@ -91,7 +91,7 @@ defmodule TokenGuard.MixProject do
         "compile --warnings-as-errors",
         "deps.unlock --unused",
         "format",
-        "credo",
+        "credo --strict",
         "test"
       ]
     ]
