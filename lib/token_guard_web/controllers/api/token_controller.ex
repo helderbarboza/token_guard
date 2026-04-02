@@ -2,9 +2,14 @@ defmodule TokenGuardWeb.API.TokenController do
   use TokenGuardWeb, :controller
 
   alias TokenGuard.Tokens
+  alias TokenGuardWeb.API.ActivationParams
 
-  def activate(conn, %{"user_id" => user_id}) do
-    if valid_uuid?(user_id) do
+  def activate(conn, params) do
+    changeset = ActivationParams.changeset(params)
+
+    if changeset.valid? do
+      user_id = Ecto.Changeset.get_change(changeset, :user_id)
+
       case Tokens.activate_token(user_id) do
         {:ok, result} ->
           json(conn, %{token_id: result.token_id, user_id: result.user_id})
@@ -15,23 +20,20 @@ defmodule TokenGuardWeb.API.TokenController do
           |> json(%{error: Atom.to_string(reason)})
       end
     else
+      errors = transform_errors(changeset)
+
       conn
-      |> put_status(:bad_request)
-      |> json(%{error: "user_id must be a valid UUID"})
+      |> put_status(:unprocessable_entity)
+      |> json(%{errors: errors})
     end
   end
 
-  def activate(conn, _params) do
-    conn
-    |> put_status(:bad_request)
-    |> json(%{error: "user_id is required"})
-  end
-
-  defp valid_uuid?(string) do
-    case Ecto.UUID.cast(string) do
-      {:ok, _uuid} -> true
-      :error -> false
-    end
+  defp transform_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _match, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
   end
 
   def index(conn, _params) do

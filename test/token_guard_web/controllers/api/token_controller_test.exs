@@ -36,13 +36,13 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     test "returns error when missing user_id", %{conn: conn} do
       conn = post(conn, ~p"/api/tokens/activate")
 
-      assert json_response(conn, 400) == %{"error" => "user_id is required"}
+      assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["is required"]}}
     end
 
     test "returns error when user_id is not a valid UUID", %{conn: conn} do
       conn = post(conn, ~p"/api/tokens/activate", user_id: "not-a-uuid")
 
-      assert json_response(conn, 400) == %{"error" => "user_id must be a valid UUID"}
+      assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["must be a valid UUID"]}}
     end
 
     test "returns error when max active tokens reached", %{conn: conn} do
