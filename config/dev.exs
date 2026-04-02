@@ -92,10 +92,7 @@ config :phoenix_live_view,
 config :token_guard, Oban,
   repo: TokenGuard.Repo,
   plugins: [
-    {Oban.Plugins.Crontab,
-     crontab: [
-       {"* * * * *", TokenGuard.Workers.ExpiredTokenReleaser}
-     ]}
+    {Oban.Plugins.Cron, crontab: [{"* * * * *", TokenGuard.Workers.ExpiredTokenReleaser}]}
   ],
   queues: [default: 10]
 
