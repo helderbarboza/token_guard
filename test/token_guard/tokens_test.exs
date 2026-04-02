@@ -187,9 +187,8 @@ defmodule TokenGuard.TokensTest do
 
       assert length(Tokens.list_active_tokens()) == 3
 
-      count = Tokens.release_all_active_tokens()
+      Tokens.release_all_active_tokens()
 
-      assert count == 3
       assert length(Tokens.list_active_tokens()) == 0
       assert length(Tokens.list_available_tokens()) == 100
     end
@@ -203,9 +202,8 @@ defmodule TokenGuard.TokensTest do
       from(u in TokenUsage, where: u.token_id == ^token_id)
       |> Repo.update_all(set: [started_at: yesterday])
 
-      count = Tokens.release_expired_tokens()
+      Tokens.release_expired_tokens()
 
-      assert count >= 1
       updated_token = Tokens.get_token!(activation.token_id)
       assert updated_token.status == "available"
     end
@@ -213,9 +211,8 @@ defmodule TokenGuard.TokensTest do
     test "token auto-release does NOT release tokens active for < 2 minutes" do
       {:ok, activation} = Tokens.activate_token()
 
-      count = Tokens.release_expired_tokens()
+      Tokens.release_expired_tokens()
 
-      assert count == 0
       token = Tokens.get_token!(activation.token_id)
       assert token.status == "active"
     end

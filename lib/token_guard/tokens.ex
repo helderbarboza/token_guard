@@ -136,19 +136,17 @@ defmodule TokenGuard.Tokens do
       |> select([t, u], t)
       |> Repo.all()
 
-    Enum.map(expired_tokens, fn token ->
+    Enum.each(expired_tokens, fn token ->
       release_token(token)
     end)
-    |> length()
   end
 
   def release_all_active_tokens do
     active = list_active_tokens()
 
-    Enum.map(active, fn token ->
+    Enum.each(active, fn token ->
       release_token(token)
     end)
-    |> length()
   end
 
   def create_tokens(count) do
