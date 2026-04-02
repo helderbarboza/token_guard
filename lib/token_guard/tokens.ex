@@ -8,7 +8,7 @@ defmodule TokenGuard.Tokens do
   alias TokenGuard.Tokens.Token
   alias TokenGuard.Tokens.TokenUsage
 
-  @token_lifetime :timer.minutes(2)
+  @token_lifetime Application.compile_env(:token_guard, :token_lifetime, :timer.minutes(2))
 
   @type token_id :: binary()
   @type user_id :: binary()
@@ -101,7 +101,7 @@ defmodule TokenGuard.Tokens do
     usage = %TokenUsage{
       id: generate_uuid(),
       token_id: token.id,
-      user_identifier: user_id,
+      user_id: user_id,
       started_at: now
     }
 

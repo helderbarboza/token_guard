@@ -68,7 +68,7 @@ defmodule TokenGuardWeb.API.TokenController do
           active_user:
             if(usage) do
               %{
-                user_id: usage.user_identifier,
+                user_id: usage.user_id,
                 started_at: usage.started_at
               }
             else
@@ -94,7 +94,7 @@ defmodule TokenGuardWeb.API.TokenController do
           history:
             Enum.map(history, fn usage ->
               %{
-                user_id: usage.user_identifier,
+                user_id: usage.user_id,
                 started_at: usage.started_at,
                 ended_at: usage.ended_at
               }

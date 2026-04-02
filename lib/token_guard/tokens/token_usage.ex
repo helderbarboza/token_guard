@@ -9,7 +9,7 @@ defmodule TokenGuard.Tokens.TokenUsage do
   @primary_key {:id, :binary_id, autogenerate: false}
 
   typed_schema "token_usages" do
-    field :user_identifier, :binary_id
+    field :user_id, Ecto.UUID
     field :started_at, :utc_datetime
     field :ended_at, :utc_datetime
 
@@ -20,7 +20,7 @@ defmodule TokenGuard.Tokens.TokenUsage do
 
   def changeset(token_usage, attrs) do
     token_usage
-    |> cast(attrs, [:id, :token_id, :user_identifier, :started_at, :ended_at])
-    |> validate_required([:id, :token_id, :user_identifier, :started_at])
+    |> cast(attrs, [:id, :token_id, :user_id, :started_at, :ended_at])
+    |> validate_required([:id, :token_id, :user_id, :started_at])
   end
 end
