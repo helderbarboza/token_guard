@@ -88,13 +88,13 @@ defmodule TokenGuard.TokensTest do
       Tokens.release_all_active_tokens()
 
       for _ <- 1..100 do
-        {:ok, _} = Tokens.activate_token()
+        {:ok, _result} = Tokens.activate_token()
       end
 
       oldest_active = Tokens.list_active_tokens() |> List.first()
       oldest_id = oldest_active.id
 
-      {:ok, result} = Tokens.activate_token()
+      {:ok, _result} = Tokens.activate_token()
 
       old_token = Tokens.get_token!(oldest_id)
       assert old_token.status == "available"
@@ -121,7 +121,7 @@ defmodule TokenGuard.TokensTest do
       same_token = Enum.find(available_tokens, fn t -> t.id == token_id end)
       assert same_token != nil, "Released token should be available again"
 
-      {:ok, second_activation} = Tokens.activate_token()
+      {:ok, _result} = Tokens.activate_token()
 
       history = Tokens.get_token_history(token_id)
       user_ids = Enum.map(history, fn u -> u.user_identifier end)
