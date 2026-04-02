@@ -439,7 +439,7 @@ defmodule TokenGuardWeb.CoreComponents do
   attr :name, :string, required: true
   attr :class, :any, default: "size-4"
 
-  def icon(%{name: "hero-" <> _} = assigns) do
+  def icon(%{name: "hero-" <> _rest} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
     """

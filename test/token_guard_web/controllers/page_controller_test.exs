@@ -1,5 +1,5 @@
 defmodule TokenGuardWeb.PageControllerTest do
-  use TokenGuardWeb.ConnCase
+  use TokenGuardWeb.ConnCase, async: true
 
   test "GET /", %{conn: conn} do
     conn = get(conn, ~p"/")

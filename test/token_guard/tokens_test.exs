@@ -1,8 +1,8 @@
 defmodule TokenGuard.TokensTest do
   use TokenGuard.DataCase, async: false
 
-  alias TokenGuard.Tokens
   alias TokenGuard.Repo
+  alias TokenGuard.Tokens
   alias TokenGuard.Tokens.TokenUsage
 
   describe "token constraints" do
@@ -72,8 +72,8 @@ defmodule TokenGuard.TokensTest do
     test "cannot activate more than 100 tokens" do
       Tokens.release_all_active_tokens()
 
-      for _ <- 1..100 do
-        {:ok, _} = Tokens.activate_token()
+      for _n <- 1..100 do
+        {:ok, _result} = Tokens.activate_token()
       end
 
       active_count = length(Tokens.list_active_tokens())
@@ -87,11 +87,11 @@ defmodule TokenGuard.TokensTest do
     test "activating 101st token releases oldest active token" do
       Tokens.release_all_active_tokens()
 
-      for _ <- 1..100 do
+      for _n <- 1..100 do
         {:ok, _result} = Tokens.activate_token()
       end
 
-      oldest_active = Tokens.list_active_tokens() |> List.first()
+      oldest_active = List.first(Tokens.list_active_tokens())
       oldest_id = oldest_active.id
 
       {:ok, _result} = Tokens.activate_token()
@@ -189,7 +189,7 @@ defmodule TokenGuard.TokensTest do
 
       Tokens.release_all_active_tokens()
 
-      assert length(Tokens.list_active_tokens()) == 0
+      assert Tokens.list_active_tokens() == []
       assert length(Tokens.list_available_tokens()) == 100
     end
 
@@ -199,8 +199,8 @@ defmodule TokenGuard.TokensTest do
 
       yesterday = DateTime.add(DateTime.utc_now(), -121, :second)
 
-      from(u in TokenUsage, where: u.token_id == ^token_id)
-      |> Repo.update_all(set: [started_at: yesterday])
+      query = from(u in TokenUsage, where: u.token_id == ^token_id)
+      Repo.update_all(query, set: [started_at: yesterday])
 
       Tokens.release_expired_tokens()
 

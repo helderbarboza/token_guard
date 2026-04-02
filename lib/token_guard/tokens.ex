@@ -1,4 +1,7 @@
 defmodule TokenGuard.Tokens do
+  @moduledoc """
+  Context module for managing tokens and their usage.
+  """
   import Ecto.Query
   alias TokenGuard.Repo
   alias TokenGuard.Tokens.Token
@@ -56,15 +59,12 @@ defmodule TokenGuard.Tokens do
 
   def activate_token do
     Repo.transaction(fn ->
-      case fetch_available_token() do
-        nil ->
-          case release_oldest_active_token() do
-            nil -> Repo.rollback(:no_tokens_available)
-            token -> activate_token_record(token)
-          end
+      token = fetch_available_token() || release_oldest_active_token()
 
-        token ->
-          activate_token_record(token)
+      if token do
+        activate_token_record(token)
+      else
+        Repo.rollback(:no_tokens_available)
       end
     end)
   end
@@ -79,7 +79,7 @@ defmodule TokenGuard.Tokens do
 
   defp activate_token_record(token) do
     user_id = generate_uuid()
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now(:second)
 
     usage = %TokenUsage{
       id: generate_uuid(),
@@ -107,7 +107,7 @@ defmodule TokenGuard.Tokens do
   end
 
   def release_token(token) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now(:second)
 
     token
     |> Ecto.Changeset.change(status: "available")
@@ -150,10 +150,10 @@ defmodule TokenGuard.Tokens do
   end
 
   def create_tokens(count) do
-    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now = DateTime.utc_now(:second)
 
     tokens =
-      for _ <- 1..count do
+      for _n <- 1..count do
         %{
           id: generate_uuid(),
           status: "available",
