@@ -3,18 +3,25 @@ defmodule TokenGuard.Tokens do
   Context module for managing tokens and their usage.
   """
   import Ecto.Query
+
   alias TokenGuard.Repo
   alias TokenGuard.Tokens.Token
   alias TokenGuard.Tokens.TokenUsage
 
   @token_lifetime_seconds 120
 
+  @type token_id :: binary()
+  @type user_id :: binary()
+
+  @spec generate_uuid() :: binary()
   def generate_uuid, do: UUID.uuid4()
 
+  @spec list_tokens() :: [Token.t()]
   def list_tokens do
     Repo.all(Token)
   end
 
+  @spec list_available_tokens() :: [Token.t()]
   def list_available_tokens do
     Token
     |> where(status: "available")
@@ -22,6 +29,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+  @spec list_active_tokens() :: [Token.t()]
   def list_active_tokens do
     Token
     |> where(status: "active")
@@ -29,20 +37,27 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+  @spec get_token!(token_id()) :: Token.t()
   def get_token!(id) do
     Repo.get!(Token, id)
   end
 
+  @spec get_token_by_id(token_id()) :: Token.t() | nil
   def get_token_by_id(id) do
     Repo.get(Token, id)
   end
 
+  @spec get_token_with_active_usage(token_id()) :: %{
+          token: Token.t(),
+          active_usage: TokenUsage.t() | nil
+        }
   def get_token_with_active_usage(token_id) do
     token = Repo.get!(Token, token_id)
     usage = get_active_usage_for_token(token_id)
     %{token: token, active_usage: usage}
   end
 
+  @spec get_active_usage_for_token(token_id()) :: TokenUsage.t() | nil
   def get_active_usage_for_token(token_id) do
     TokenUsage
     |> where(token_id: ^token_id)
@@ -50,6 +65,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
+  @spec get_token_history(token_id()) :: [TokenUsage.t()]
   def get_token_history(token_id) do
     TokenUsage
     |> where(token_id: ^token_id)
@@ -57,6 +73,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+  @spec activate_token() :: {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token do
     Repo.transaction(fn ->
       token = fetch_available_token() || release_oldest_active_token()
@@ -106,6 +123,7 @@ defmodule TokenGuard.Tokens do
     |> release_token()
   end
 
+  @spec release_token(Token.t()) :: Token.t()
   def release_token(token) do
     now = DateTime.utc_now(:second)
 
@@ -126,6 +144,7 @@ defmodule TokenGuard.Tokens do
     token
   end
 
+  @spec release_expired_tokens() :: :ok
   def release_expired_tokens do
     deadline = DateTime.add(DateTime.utc_now(), -@token_lifetime_seconds, :second)
 
@@ -141,6 +160,7 @@ defmodule TokenGuard.Tokens do
     end)
   end
 
+  @spec release_all_active_tokens() :: non_neg_integer()
   def release_all_active_tokens do
     active = list_active_tokens()
 
@@ -151,6 +171,7 @@ defmodule TokenGuard.Tokens do
     length(active)
   end
 
+  @spec create_tokens(non_neg_integer()) :: {non_neg_integer(), [any()]}
   def create_tokens(count) do
     now = DateTime.utc_now(:second)
 
