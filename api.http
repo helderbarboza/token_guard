@@ -4,8 +4,8 @@
 # This is a token management system with 100 pre-generated tokens.
 # Tokens are automatically released after 2 minutes of activity.
 
-@baseUrl = http://localhost:4000/api
-@userId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+@base_url = http://localhost:4000/api
+@user_id = {{$guid}}
 
 ###
 
@@ -14,11 +14,12 @@
 # Returns: token_id and user_id
 # Uses FIFO (first available token by inserted_at)
 # @name registerToken
-POST {{baseUrl}}/tokens/register
-Content-Type: application/json
+POST {{base_url}}/tokens/register
+content-type: application/json
+accept: application/json
 
 {
-  "user_id": {{userId}}
+  "user_id": "{{user_id}}"
 }
 
 ###
@@ -26,29 +27,35 @@ Content-Type: application/json
 # List all tokens
 # Returns: all tokens with their status
 # @name listTokens
-GET {{baseUrl}}/tokens
+GET {{base_url}}/tokens
+accept: application/json
+
+###
 
 # Extract first available token (all tokens start as available)
 # @name firstToken
-@tokenId = {{listTokens.response.body.tokens[0].id}}
+@token_id = {{listTokens.response.body.tokens[0].id}}
 
 ###
 
 # Get specific token
 # Returns: token details including active user (if active)
 # @name getToken
-GET {{baseUrl}}/tokens/{{tokenId}}
+GET {{base_url}}/tokens/{{token_id}}
+accept: application/json
 
 ###
 
 # Get token history
 # Returns: usage history for a specific token
 # @name getTokenHistory
-GET {{baseUrl}}/tokens/{{tokenId}}/history
+GET {{base_url}}/tokens/{{token_id}}/history
+accept: application/json
 
 ###
 
 # Clear all active tokens
 # Releases all active tokens back to available pool
 # @name clearActiveTokens
-DELETE {{baseUrl}}/tokens/active
+DELETE {{base_url}}/tokens/active
+accept: application/json
