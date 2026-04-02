@@ -4,5 +4,6 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaser do
   @impl Oban.Worker
   def perform(_job) do
     TokenGuard.Tokens.release_expired_tokens()
+    :ok
   end
 end
