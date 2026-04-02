@@ -1,5 +1,6 @@
 defmodule TokenGuardWeb.API.TokenController do
   use TokenGuardWeb, :controller
+  require Logger
 
   alias TokenGuard.Tokens
   alias TokenGuardWeb.API.ActivationParams
@@ -9,18 +10,30 @@ defmodule TokenGuardWeb.API.TokenController do
 
     if changeset.valid? do
       user_id = Ecto.Changeset.get_change(changeset, :user_id)
+      Logger.debug("Token activation request", user_id: user_id)
 
       case Tokens.activate_token(user_id) do
         {:ok, result} ->
+          Logger.info("Token activation successful",
+            user_id: user_id,
+            token_id: result.token_id
+          )
+
           json(conn, %{token_id: result.token_id, user_id: result.user_id})
 
         {:error, reason} ->
+          Logger.warning("Token activation failed",
+            user_id: user_id,
+            reason: reason
+          )
+
           conn
           |> put_status(:unprocessable_entity)
           |> json(%{error: Atom.to_string(reason)})
       end
     else
       errors = transform_errors(changeset)
+      Logger.warning("Token activation validation failed", errors: errors)
 
       conn
       |> put_status(:unprocessable_entity)
@@ -104,6 +117,7 @@ defmodule TokenGuardWeb.API.TokenController do
   end
 
   def clear(conn, _params) do
+    Logger.info("Admin request to release all active tokens")
     count = Tokens.release_all_active_tokens()
 
     json(conn, %{message: "#{count} token(s) released", released_count: count})

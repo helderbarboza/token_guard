@@ -95,5 +95,3 @@ config :token_guard, Oban,
     {Oban.Plugins.Cron, crontab: [{"* * * * *", TokenGuard.Workers.ExpiredTokenReleaser}]}
   ],
   queues: [default: 10]
-
-config :token_guard, start_oban: true

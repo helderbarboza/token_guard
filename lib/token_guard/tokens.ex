@@ -3,6 +3,7 @@ defmodule TokenGuard.Tokens do
   Context module for managing tokens and their usage.
   """
   import Ecto.Query
+  require Logger
 
   alias TokenGuard.Repo
   alias TokenGuard.Tokens.Token
@@ -76,15 +77,26 @@ defmodule TokenGuard.Tokens do
   @spec activate_token(user_id()) ::
           {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token(user_id) do
-    Repo.transaction(fn ->
-      token = fetch_available_token() || release_oldest_active_token()
+    result =
+      Repo.transaction(fn ->
+        token = fetch_available_token() || release_oldest_active_token()
 
-      if token do
-        activate_token_record(token, user_id)
-      else
-        Repo.rollback(:no_tokens_available)
-      end
-    end)
+        if token do
+          activate_token_record(token, user_id)
+        else
+          Repo.rollback(:no_tokens_available)
+        end
+      end)
+
+    case result do
+      {:ok, %{token_id: token_id, user_id: ^user_id}} ->
+        Logger.info("Token activated", token_id: token_id, user_id: user_id)
+        {:ok, %{token_id: token_id, user_id: user_id}}
+
+      {:error, :no_tokens_available} ->
+        Logger.warning("No tokens available for user", user_id: user_id)
+        {:error, :no_tokens_available}
+    end
   end
 
   defp fetch_available_token do
@@ -141,6 +153,7 @@ defmodule TokenGuard.Tokens do
       |> Repo.update!()
     end)
 
+    Logger.info("Token released", token_id: token.id)
     token
   end
 
@@ -158,6 +171,11 @@ defmodule TokenGuard.Tokens do
     Enum.each(expired_tokens, fn token ->
       release_token(token)
     end)
+
+    Logger.info("Expired tokens check completed",
+      expired_count: length(expired_tokens),
+      deadline: deadline
+    )
   end
 
   @spec release_all_active_tokens() :: non_neg_integer()
@@ -168,6 +186,7 @@ defmodule TokenGuard.Tokens do
       release_token(token)
     end)
 
+    Logger.info("Admin released all active tokens", released_count: length(active))
     length(active)
   end
 
