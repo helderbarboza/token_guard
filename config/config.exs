@@ -9,7 +9,8 @@ import Config
 
 config :token_guard,
   ecto_repos: [TokenGuard.Repo],
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  token_lifetime: :timer.minutes(2)
 
 # Configure the endpoint
 config :token_guard, TokenGuardWeb.Endpoint,

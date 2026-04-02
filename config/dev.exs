@@ -88,10 +88,15 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-# Oban config (disabled for dev until migrations are added)
+# Oban config
 config :token_guard, Oban,
   repo: TokenGuard.Repo,
-  plugins: [],
+  plugins: [
+    {Oban.Plugins.Crontab,
+     crontab: [
+       {"* * * * *", TokenGuard.Workers.ExpiredTokenReleaser}
+     ]}
+  ],
   queues: [default: 10]
 
-config :token_guard, start_oban: false
+config :token_guard, start_oban: true
