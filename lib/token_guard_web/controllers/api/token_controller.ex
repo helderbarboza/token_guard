@@ -120,7 +120,8 @@ defmodule TokenGuardWeb.API.TokenController do
   end
 
   defp token_history(token_id) do
-    Tokens.get_token_history(token_id)
+    token_id
+    |> Tokens.get_token_history()
     |> Enum.map(fn usage ->
       %{
         user_id: usage.user_id,
@@ -131,7 +132,7 @@ defmodule TokenGuardWeb.API.TokenController do
   end
 
   defp validate_uuid(id) do
-    case Ecto.UUID.cast(id) do
+    case Ecto.UUID.dump(id) do
       {:ok, _uuid} -> {:ok, id}
       :error -> :error
     end
