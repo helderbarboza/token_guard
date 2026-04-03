@@ -66,53 +66,76 @@ defmodule TokenGuardWeb.API.TokenController do
   end
 
   def show(conn, %{"id" => id}) do
-    case Tokens.get_token_by_id(id) do
-      nil ->
+    case validate_uuid(id) do
+      {:ok, _valid_id} ->
+        case Tokens.get_token_by_id(id) do
+          nil ->
+            conn
+            |> put_status(:not_found)
+            |> json(%{error: "Token not found"})
+
+          token ->
+            usage = Tokens.get_active_usage_for_token(id)
+
+            json(conn, %{
+              id: token.id,
+              status: token.status,
+              active_user:
+                if(usage) do
+                  %{
+                    user_id: usage.user_id,
+                    started_at: usage.started_at
+                  }
+                else
+                  nil
+                end,
+              inserted_at: token.inserted_at,
+              updated_at: token.updated_at
+            })
+        end
+
+      :error ->
         conn
-        |> put_status(:not_found)
-        |> json(%{error: "Token not found"})
-
-      token ->
-        usage = Tokens.get_active_usage_for_token(id)
-
-        json(conn, %{
-          id: token.id,
-          status: token.status,
-          active_user:
-            if(usage) do
-              %{
-                user_id: usage.user_id,
-                started_at: usage.started_at
-              }
-            else
-              nil
-            end,
-          inserted_at: token.inserted_at,
-          updated_at: token.updated_at
-        })
+        |> put_status(:bad_request)
+        |> json(%{error: "Invalid token ID format"})
     end
   end
 
   def history(conn, %{"id" => id}) do
-    case Tokens.get_token_by_id(id) do
-      nil ->
+    case validate_uuid(id) do
+      {:ok, _valid_id} ->
+        case Tokens.get_token_by_id(id) do
+          nil ->
+            conn
+            |> put_status(:not_found)
+            |> json(%{error: "Token not found"})
+
+          _token ->
+            history = Tokens.get_token_history(id)
+
+            json(conn, %{
+              history:
+                Enum.map(history, fn usage ->
+                  %{
+                    user_id: usage.user_id,
+                    started_at: usage.started_at,
+                    ended_at: usage.ended_at
+                  }
+                end)
+            })
+        end
+
+      :error ->
         conn
-        |> put_status(:not_found)
-        |> json(%{error: "Token not found"})
+        |> put_status(:bad_request)
+        |> json(%{error: "Invalid token ID format"})
+    end
+  end
 
-      _token ->
-        history = Tokens.get_token_history(id)
-
-        json(conn, %{
-          history:
-            Enum.map(history, fn usage ->
-              %{
-                user_id: usage.user_id,
-                started_at: usage.started_at,
-                ended_at: usage.ended_at
-              }
-            end)
-        })
+  defp validate_uuid(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, _uuid} -> {:ok, id}
+      :error -> :error
     end
   end
 
