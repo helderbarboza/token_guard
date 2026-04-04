@@ -64,10 +64,10 @@ defmodule TokenGuard.TokensTest do
       {:ok, first} = Tokens.activate_token(Ecto.UUID.generate())
       {:ok, second} = Tokens.activate_token(Ecto.UUID.generate())
 
-      first_token = Tokens.get_token!(first.token_id)
-      second_token = Tokens.get_token!(second.token_id)
+      first_usage = Tokens.get_active_usage_for_token(first.token_id)
+      second_usage = Tokens.get_active_usage_for_token(second.token_id)
 
-      assert first_token.inserted_at <= second_token.inserted_at
+      assert DateTime.compare(first_usage.started_at, second_usage.started_at) in [:lt, :eq]
     end
 
     test "activating 101st token reuses oldest active token via FIFO" do
