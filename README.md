@@ -30,6 +30,7 @@ TokenGuard is a **token pool management API** that manages a pool of pre-generat
 - **Usage History**: Full audit trail of token usage with start/end timestamps
 - **Admin Controls**: Endpoints to release all active tokens instantly
 - **Background Processing**: Oban-powered background job for token cleanup
+- **Per-User Limit**: Users can only hold one active token at a time (duplicate registration returns existing token)
 
 ## Getting Started
 
@@ -90,7 +91,7 @@ iex -S mix phx.server
 
 ### Activate a Token (`POST /api/tokens/register`)
 
-Register a user and receive an allocated token.
+Register a user and receive an allocated token. If the user already has an active token, returns that existing token (does not create a new one).
 
 ```mermaid
 sequenceDiagram
@@ -112,38 +113,51 @@ sequenceDiagram
     
     API->>Tokens: activate_token(user_id)
     
-    Tokens->>Repo: transaction(fn)
-    
     rect rgba(200, 230, 200, 0.3)
-        Note over Repo,DB: Fetch available token
-        Tokens->>Repo: SELECT available tokens<br/>ORDER BY inserted_at LIMIT 1
+        Note over Repo,DB: Check if user already has active token
+        Tokens->>Repo: SELECT * FROM token_usages<br/>WHERE user_id = ?<br/>AND ended_at IS NULL
         Repo->>DB: Query
-        DB->>Repo: First available token
-        Repo->>Tokens: Token struct
+        DB->>Repo: Existing usage or nil
     end
     
-    alt No available tokens
-        Note over Tokens: Release oldest active token (FIFO)
-        Tokens->>Repo: SELECT active tokens<br/>ORDER BY inserted_at LIMIT 1
-        Repo->>DB: Query
-        DB->>Repo: Oldest active token
-        Tokens->>Tokens: release_token(oldest)
-        Tokens->>Repo: UPDATE token status = available
-        Tokens->>Repo: UPDATE usage ended_at = now
-        Tokens->>Repo: commit
+    alt User already has active token
+        Note over Tokens: Return existing token (no new usage record)
+        Tokens-->>API: {:ok, %{token_id: existing_token_id, user_id}}
+        API-->>Client: 200 OK<br/>{"token_id": "existing_token", "user_id": "..."}
+    else No active token for user
+        Tokens->>Repo: transaction(fn)
+        
+        rect rgba(200, 230, 200, 0.3)
+            Note over Repo,DB: Fetch available token
+            Tokens->>Repo: SELECT available tokens<br/>ORDER BY inserted_at LIMIT 1
+            Repo->>DB: Query
+            DB->>Repo: First available token
+            Repo->>Tokens: Token struct
+        end
+        
+        alt No available tokens
+            Note over Tokens: Release oldest active token (FIFO)
+            Tokens->>Repo: SELECT active tokens<br/>ORDER BY inserted_at LIMIT 1
+            Repo->>DB: Query
+            DB->>Repo: Oldest active token
+            Tokens->>Tokens: release_token(oldest)
+            Tokens->>Repo: UPDATE token status = available
+            Tokens->>Repo: UPDATE usage ended_at = now
+            Tokens->>Repo: commit
+        end
+        
+        rect rgba(200, 220, 255, 0.3)
+            Note over Repo,DB: Activate token
+            Tokens->>Repo: UPDATE token status = active
+            Repo->>DB: Update
+            Tokens->>Repo: INSERT token_usage record
+            Repo->>DB: Insert
+        end
+        
+        Repo-->>Tokens: %{token_id, user_id}
+        Tokens-->>API: {:ok, result}
+        API-->>Client: 200 OK<br/>{"token_id": "...", "user_id": "..."}
     end
-    
-    rect rgba(200, 220, 255, 0.3)
-        Note over Repo,DB: Activate token
-        Tokens->>Repo: UPDATE token status = active
-        Repo->>DB: Update
-        Tokens->>Repo: INSERT token_usage record
-        Repo->>DB: Insert
-    end
-    
-    Repo-->>Tokens: %{token_id, user_id}
-    Tokens-->>API: {:ok, result}
-    API-->>Client: 200 OK<br/>{"token_id": "...", "user_id": "..."}
 ```
 
 **Request:**
@@ -459,6 +473,12 @@ sequenceDiagram
     User2->>Pool: POST /api/tokens/register (user2_id)
     Pool->>Pool: Allocate token-002 to user2
     Note over Pool: 98 available, 2 active
+
+    User1->>Pool: POST /api/tokens/register (user1_id)
+    Pool->>Pool: Check for existing token
+    Note over Pool: User1 already has token-001
+    Pool-->>User1: Return token-001 (existing)
+    Note over Pool: 98 available, 2 active (no change)
 
     User1->>Pool: GET /api/tokens/token-001
     Pool-->>User1: {"status": "active", "user_id": user1}

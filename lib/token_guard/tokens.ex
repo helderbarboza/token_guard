@@ -69,6 +69,14 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
+  @spec get_active_usage_for_user(user_id()) :: TokenUsage.t() | nil
+  def get_active_usage_for_user(user_id) do
+    TokenUsage
+    |> where(user_id: ^user_id)
+    |> where([u], is_nil(u.ended_at))
+    |> Repo.one()
+  end
+
   @spec get_token_history(token_id()) :: [TokenUsage.t()]
   def get_token_history(token_id) do
     TokenUsage
@@ -78,13 +86,31 @@ defmodule TokenGuard.Tokens do
   end
 
   @doc """
-  Activates a token for the given user. First attempts to use an available token;
+  Activates a token for the given user.
+
+  First attempts to use an available token;
   if none available, releases the oldest active token. Returns the token_id and user_id
   on success, or `:no_tokens_available` error if no tokens can be activated.
+  If the user already has an active token, returns that existing token.
   """
   @spec activate_token(user_id()) ::
           {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token(user_id) do
+    case get_active_usage_for_user(user_id) do
+      %{token_id: existing_token_id} ->
+        Logger.info("User already has active token, returning existing",
+          user_id: user_id,
+          token_id: existing_token_id
+        )
+
+        {:ok, %{token_id: existing_token_id, user_id: user_id}}
+
+      nil ->
+        do_activate_token(user_id)
+    end
+  end
+
+  defp do_activate_token(user_id) do
     result =
       Repo.transaction(fn ->
         token = fetch_available_token() || release_oldest_active_token()

@@ -50,6 +50,34 @@ defmodule TokenGuard.TokensTest do
       assert token.status == :active
     end
 
+    test "a user cannot have more than one active token - returns existing" do
+      user_id = Ecto.UUID.generate()
+      {:ok, activation1} = Tokens.activate_token(user_id)
+
+      assert Tokens.get_active_usage_for_user(user_id) != nil
+      assert length(Tokens.list_active_tokens()) == 1
+
+      {:ok, activation2} = Tokens.activate_token(user_id)
+
+      assert activation2.token_id == activation1.token_id
+      assert length(Tokens.list_active_tokens()) == 1
+      assert Tokens.get_active_usage_for_user(user_id) != nil
+    end
+
+    test "after releasing, user can activate a new token" do
+      user_id = Ecto.UUID.generate()
+      {:ok, activation1} = Tokens.activate_token(user_id)
+      token1 = Tokens.get_token!(activation1.token_id)
+
+      Tokens.release_token(token1)
+
+      assert Tokens.get_active_usage_for_user(user_id) == nil
+
+      {:ok, activation2} = Tokens.activate_token(user_id)
+      assert activation2.token_id != activation1.token_id
+      assert Tokens.get_active_usage_for_user(user_id) != nil
+    end
+
     test "activating a token creates a usage record" do
       {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
       usage = Tokens.get_active_usage_for_token(result.token_id)
