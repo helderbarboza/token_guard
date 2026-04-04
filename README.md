@@ -105,7 +105,7 @@ sequenceDiagram
     
     Tokens->>Repo: transaction(fn)
     
-    rect rgb(200, 230, 200)
+    rect rgba(200, 230, 200, 0.3)
         Note over Repo,DB: Fetch available token
         Tokens->>Repo: SELECT available tokens<br/>ORDER BY inserted_at LIMIT 1
         Repo->>DB: Query
@@ -124,7 +124,7 @@ sequenceDiagram
         Tokens->>Repo: commit
     end
     
-    rect rgb(200, 220, 255)
+    rect rgba(200, 220, 255, 0.3)
         Note over Repo,DB: Activate token
         Tokens->>Repo: UPDATE token status = active
         Repo->>DB: Update
