@@ -441,7 +441,7 @@ config :token_guard,
 
 Or in `config/dev.exs` / `config/prod.exs` for environment-specific values.
 
-## Token Lifecycle
+### Token Lifecycle
 
 ```mermaid
 sequenceDiagram
