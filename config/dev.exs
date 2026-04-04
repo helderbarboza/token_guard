@@ -12,22 +12,12 @@ config :token_guard, TokenGuard.Repo,
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
-#
-# The watchers configuration can be used to run external
-# watchers to your application. For example, we can use it
-# to bundle .js and .css sources.
 config :token_guard, TokenGuardWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "zP2mgut6CnP0fGGz9BoTkSkzH2c+UIqSUn26QRaIX8uOJlXeSNj2t+oBen04AQE7",
-  watchers: [
-    esbuild: {Esbuild, :install_and_run, [:token_guard, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:token_guard, ~w(--watch)]}
-  ]
+  secret_key_base: "zP2mgut6CnP0fGGz9BoTkSkzH2c+UIqSUn26QRaIX8uOJlXeSNj2t+oBen04AQE7"
 
 # ## SSL Support
 #
@@ -57,13 +47,9 @@ config :token_guard, TokenGuardWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
-      # Static assets, except user uploads
-      ~r"priv/static/(?!uploads/).*\.(js|css|png|jpeg|jpg|gif|svg)$"E,
-      # Gettext translations
       ~r"priv/gettext/.*\.po$"E,
-      # Router, Controllers, LiveViews and LiveComponents
       ~r"lib/token_guard_web/router\.ex$"E,
-      ~r"lib/token_guard_web/(controllers|live|components)/.*\.(ex|heex)$"E
+      ~r"lib/token_guard_web/(controllers|components)/.*\.(ex|heex)$"E
     ]
   ]
 

@@ -14,12 +14,6 @@ defmodule TokenGuardWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", TokenGuardWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   scope "/api", TokenGuardWeb.API do
     pipe_through :api
 
