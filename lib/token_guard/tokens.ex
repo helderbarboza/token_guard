@@ -14,6 +14,9 @@ defmodule TokenGuard.Tokens do
   @type token_id :: binary()
   @type user_id :: binary()
 
+  @doc """
+  Generates a new UUID string for token/usage IDs.
+  """
   @spec generate_uuid() :: binary()
   def generate_uuid, do: UUID.uuid4()
 
@@ -74,6 +77,11 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+  @doc """
+  Activates a token for the given user. First attempts to use an available token;
+  if none available, releases the oldest active token. Returns the token_id and user_id
+  on success, or `:no_tokens_available` error if no tokens can be activated.
+  """
   @spec activate_token(user_id()) ::
           {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token(user_id) do
@@ -135,6 +143,10 @@ defmodule TokenGuard.Tokens do
     |> release_token()
   end
 
+  @doc """
+  Releases a token back to available status and marks any active usage as ended.
+  Used when a user explicitly releases their token or when it expires.
+  """
   @spec release_token(Token.t()) :: Token.t()
   def release_token(token) do
     now = DateTime.utc_now(:second)
@@ -157,6 +169,11 @@ defmodule TokenGuard.Tokens do
     token
   end
 
+  @doc """
+  Finds all tokens that have been active beyond the configured token lifetime
+  and releases them. Called periodically by the background worker to enforce
+  automatic token expiration.
+  """
   @spec release_expired_tokens() :: :ok
   def release_expired_tokens do
     deadline = DateTime.add(DateTime.utc_now(), -@token_lifetime, :millisecond)

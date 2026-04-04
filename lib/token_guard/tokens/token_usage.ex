@@ -18,6 +18,9 @@ defmodule TokenGuard.Tokens.TokenUsage do
     timestamps(type: :utc_datetime)
   end
 
+  @doc """
+  Creates a changeset for validating token usage attributes.
+  """
   def changeset(token_usage, attrs) do
     token_usage
     |> cast(attrs, [:id, :token_id, :user_id, :started_at, :ended_at])

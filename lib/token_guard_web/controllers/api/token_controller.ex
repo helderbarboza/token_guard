@@ -1,10 +1,18 @@
 defmodule TokenGuardWeb.API.TokenController do
+  @moduledoc """
+  API controller for token management operations.
+  Provides endpoints for activating, releasing, and viewing token status.
+  """
   use TokenGuardWeb, :controller
   require Logger
 
   alias TokenGuard.Tokens
   alias TokenGuardWeb.API.ActivationParams
 
+  @doc """
+  Activates a token for a given user. If no available tokens exist,
+  automatically releases the oldest active token to make room.
+  """
   def activate(conn, params) do
     changeset = ActivationParams.changeset(params)
 
@@ -49,6 +57,9 @@ defmodule TokenGuardWeb.API.TokenController do
     end)
   end
 
+  @doc """
+  Lists all tokens with their current status and timestamps.
+  """
   def index(conn, _params) do
     tokens = Tokens.list_tokens()
 
@@ -65,6 +76,10 @@ defmodule TokenGuardWeb.API.TokenController do
     })
   end
 
+  @doc """
+  Returns detailed information about a specific token, including
+  the currently active user if the token is in use.
+  """
   def show(conn, %{"id" => id}) do
     with {:ok, id} <- validate_uuid(id),
          {:ok, token} <- fetch_token(id) do
@@ -102,6 +117,10 @@ defmodule TokenGuardWeb.API.TokenController do
     end
   end
 
+  @doc """
+  Returns the usage history for a specific token, including all
+  activation and deactivation events.
+  """
   def history(conn, %{"id" => id}) do
     with {:ok, id} <- validate_uuid(id),
          {:ok, _token} <- fetch_token(id) do
@@ -138,6 +157,10 @@ defmodule TokenGuardWeb.API.TokenController do
     end
   end
 
+  @doc """
+  Releases all currently active tokens. Admin operation to force
+  reset all tokens to available state.
+  """
   def clear(conn, _params) do
     Logger.info("Admin request to release all active tokens")
     count = Tokens.release_all_active_tokens()
