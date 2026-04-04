@@ -1,5 +1,7 @@
 # TokenGuard
 
+[![Tests](https://github.com/helderbarboza/token_guard/actions/workflows/ci.yml/badge.svg)](https://github.com/helderbarboza/token_guard/actions/workflows/ci.yml)
+
 A lightweight token pool management system built with Elixir and Phoenix.
 
 ## Overview
