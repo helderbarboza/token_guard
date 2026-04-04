@@ -13,6 +13,15 @@ TokenGuard is a **token pool management API** that manages a pool of pre-generat
 - Automatically reclaim inactive resources
 - Implement FIFO allocation policies
 
+## Stack
+
+- **Elixir** 1.15+ / **Erlang** OTP 26+
+- **Phoenix** v1.8 (web framework)
+- **Ecto** (database ORM)
+- **PostgreSQL** 14+ (database)
+- **Oban** (background job processing)
+- **LiveDashboard** (monitoring)
+
 ## Features
 
 - **Token Pool**: Pre-configured pool of 100 tokens (easily scalable)
