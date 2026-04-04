@@ -144,20 +144,28 @@ defmodule TokenGuard.Tokens do
   defp activate_token_record(token, user_id) do
     now = DateTime.utc_now(:second)
 
-    usage = %TokenUsage{
-      id: generate_uuid(),
-      token_id: token.id,
-      user_id: user_id,
-      started_at: now
-    }
+    changeset =
+      TokenUsage.changeset(
+        %TokenUsage{
+          id: generate_uuid(),
+          token_id: token.id,
+          user_id: user_id,
+          started_at: now
+        },
+        %{}
+      )
 
     token
     |> Ecto.Changeset.change(status: :active)
     |> Repo.update!()
 
-    Repo.insert!(usage)
+    case Repo.insert(changeset) do
+      {:ok, _usage} ->
+        %{token_id: token.id, user_id: user_id}
 
-    %{token_id: token.id, user_id: user_id}
+      {:error, _changeset} ->
+        Repo.rollback(:user_already_has_active_token)
+    end
   end
 
   defp release_oldest_active_token do
