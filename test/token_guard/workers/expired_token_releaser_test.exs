@@ -3,6 +3,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
 
   import Ecto.Query
 
+  alias TokenGuard.Repo
   alias TokenGuard.Tokens
   alias TokenGuard.Workers.ExpiredTokenReleaser
 
@@ -25,7 +26,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
 
       TokenGuard.Tokens.TokenUsage
       |> where(token_id: ^activation.token_id)
-      |> TokenGuard.Repo.update_all(set: [started_at: expired_time])
+      |> Repo.update_all(set: [started_at: expired_time])
 
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
 
@@ -55,7 +56,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       for act <- [activation1, activation2, activation3] do
         TokenGuard.Tokens.TokenUsage
         |> where(token_id: ^act.token_id)
-        |> TokenGuard.Repo.update_all(set: [started_at: expired_time])
+        |> Repo.update_all(set: [started_at: expired_time])
       end
 
       assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
