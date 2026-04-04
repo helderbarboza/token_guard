@@ -157,24 +157,6 @@ Content-Type: application/json
 }
 ```
 
-**Error Response (422) - Validation Error:**
-
-```json
-{
-  "errors": {
-    "user_id": ["must be a valid UUID"]
-  }
-}
-```
-
-**Error Response (422) - No Tokens Available:**
-
-```json
-{
-  "error": "no_tokens_available"
-}
-```
-
 ---
 
 ### List All Tokens (`GET /api/tokens`)
@@ -301,22 +283,6 @@ GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479
   },
   "inserted_at": "2024-04-01T10:00:00Z",
   "updated_at": "2024-04-01T12:30:00Z"
-}
-```
-
-**Error Response (404):**
-
-```json
-{
-  "error": "Token not found"
-}
-```
-
-**Error Response (400) - Invalid UUID format:**
-
-```json
-{
-  "error": "not_found"
 }
 ```
 
@@ -451,7 +417,20 @@ DELETE /api/tokens/active
 }
 ```
 
----
+## Configuration
+
+### Token Lifetime
+
+The token lifetime determines how long a token can be active before being automatically released. The default is 2 minutes.
+
+To configure, set in `config/config.exs`:
+
+```elixir
+config :token_guard,
+  token_lifetime: :timer.minutes(2)
+```
+
+Or in `config/dev.exs` / `config/prod.exs` for environment-specific values.
 
 ## Token Lifecycle
 
@@ -492,21 +471,6 @@ sequenceDiagram
     Pool->>Pool: Release all active tokens
     Note over Pool: 100 available, 0 active
 ```
-
-## Configuration
-
-### Token Lifetime
-
-The token lifetime determines how long a token can be active before being automatically released. The default is 2 minutes.
-
-To configure, set in `config/config.exs`:
-
-```elixir
-config :token_guard,
-  token_lifetime: :timer.minutes(2)
-```
-
-Or in `config/dev.exs` / `config/prod.exs` for environment-specific values.
 
 ### Pool Size
 
