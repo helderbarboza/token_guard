@@ -1,19 +1,11 @@
 # TokenGuard API Documentation
-# Base URL: http://localhost:4000/api
-#
-# This is a token management system with 100 pre-generated tokens.
-# Tokens are automatically released after 2 minutes of activity.
 
 @base_url = http://localhost:4000/api
 @user_id = {{$guid}}
+@token_id = {{registerToken.response.body.token_id}}
 
-###
-
-# Register a token (activate for a user)
-# Required: user_id (must be a valid UUID)
-# Returns: token_id and user_id
-# Uses FIFO (first available token by inserted_at)
 # @name registerToken
+# Register a new token for a user
 POST {{base_url}}/tokens/register
 content-type: application/json
 accept: application/json
@@ -24,38 +16,28 @@ accept: application/json
 
 ###
 
-# List all tokens
-# Returns: all tokens with their status
 # @name listTokens
+# List all tokens for the user
 GET {{base_url}}/tokens
 accept: application/json
 
 ###
 
-# Extract first available token (all tokens start as available)
-# @name firstToken
-@token_id = {{listTokens.response.body.tokens[0].id}}
-
-###
-
-# Get specific token
-# Returns: token details including active user (if active)
 # @name getToken
+# Get a specific token by ID
 GET {{base_url}}/tokens/{{token_id}}
 accept: application/json
 
 ###
 
-# Get token history
-# Returns: usage history for a specific token
 # @name getTokenHistory
+# Get the history of a specific token
 GET {{base_url}}/tokens/{{token_id}}/history
 accept: application/json
 
 ###
 
-# Clear all active tokens
-# Releases all active tokens back to available pool
 # @name clearActiveTokens
+# Clear all active tokens for the user
 DELETE {{base_url}}/tokens/active
 accept: application/json
