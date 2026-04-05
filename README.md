@@ -212,8 +212,6 @@ sequenceDiagram
 #### Response (Error)
 - 422 Unprocessable Entity: Invalid user_id format
 
----
-
 ### List All Tokens (`GET /api/tokens`)
 
 Get the status of all tokens in the pool.
@@ -284,8 +282,6 @@ sequenceDiagram
 
 #### Response (Error)
 *No specific errors beyond standard HTTP errors*
-
----
 
 ### Get Token Details (`GET /api/tokens/:id`)
 
@@ -375,8 +371,6 @@ sequenceDiagram
 - 400 Bad Request: Invalid token ID format
 - 404 Not Found: Token not found
 
----
-
 ### Get Token History (`GET /api/tokens/:id/history`)
 
 View the usage history for a specific token.
@@ -457,8 +451,6 @@ sequenceDiagram
 - 400 Bad Request: Invalid token ID format
 - 404 Not Found: Token not found
 
----
-
 ### Release All Active Tokens (`DELETE /api/tokens/active`)
 
 Immediately release all active tokens (admin operation).
@@ -525,15 +517,6 @@ sequenceDiagram
 {
   "message": "3 token(s) released",
   "released_count": 3
-}
-```
-
-#### Response (Success - No Active Tokens)
-
-```json
-{
-  "message": "0 token(s) released",
-  "released_count": 0
 }
 ```
 
@@ -610,8 +593,8 @@ sequenceDiagram
 The pool size is set during database seeding. To create a different number of tokens:
 
 ```elixir
-# In iex
-TokenGuard.Tokens.create_tokens(50)
+iex> TokenGuard.Tokens.create_tokens(50)
+{50, nil}
 ```
 
 ## Testing
