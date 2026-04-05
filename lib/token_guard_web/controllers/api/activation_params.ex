@@ -1,10 +1,14 @@
 defmodule TokenGuardWeb.API.ActivationParams do
-  use Ecto.Schema
+  @moduledoc """
+  Embedded schema for validating token activation request parameters.
+  """
+
+  use TypedEctoSchema
   import Ecto.Changeset
 
   @primary_key false
 
-  schema "activation_params" do
+  typed_embedded_schema do
     field :user_id, :string
   end
 
