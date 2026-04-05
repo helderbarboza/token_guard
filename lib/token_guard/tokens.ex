@@ -14,11 +14,22 @@ defmodule TokenGuard.Tokens do
   @type token_id :: binary()
   @type user_id :: binary()
 
+  @doc """
+  Retrieves all tokens from the database.
+
+  Returns a list of all tokens regardless of their status.
+  """
   @spec list_tokens() :: [Token.t()]
   def list_tokens do
     Repo.all(Token)
   end
 
+  @doc """
+  Retrieves all tokens with available status.
+
+  Returns a list of tokens sorted by insertion time, representing tokens
+  that are not currently in use and can be activated.
+  """
   @spec list_available_tokens() :: [Token.t()]
   def list_available_tokens do
     Token
@@ -27,6 +38,12 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+@doc """
+  Retrieves all tokens with active status.
+
+  Returns a list of tokens sorted by insertion time, representing tokens
+  that are currently assigned to users.
+  """
   @spec list_active_tokens() :: [Token.t()]
   def list_active_tokens do
     Token
@@ -35,16 +52,48 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
+@doc """
+  Retrieves a token by ID, raising an error if not found.
+
+  ## Parameters
+    * `id` - The token ID to retrieve
+
+  ## Raises
+    * Raises `Ecto.NoResultsError` if the token does not exist.
+  """
   @spec get_token!(token_id()) :: Token.t()
   def get_token!(id) do
     Repo.get!(Token, id)
   end
 
+@doc """
+  Retrieves a token by ID, returning nil if not found.
+
+  ## Parameters
+    * `id` - The token ID to retrieve
+
+  ## Returns
+    * A `Token.t()` struct if found, or `nil` otherwise.
+  """
   @spec get_token_by_id(token_id()) :: Token.t() | nil
   def get_token_by_id(id) do
     Repo.get(Token, id)
   end
 
+@doc """
+  Retrieves a token along with its active usage record if one exists.
+
+  ## Parameters
+    * `token_id` - The token ID to retrieve
+
+  ## Returns
+    * A map containing:
+      * `:token` - The token struct
+      * `:active_usage` - The active `TokenUsage` record, or `nil` if no active usage exists
+
+  ## Raises
+    * Raises `Ecto.NoResultsError` if the token does not exist.
+  """
   @spec get_token_with_active_usage(token_id()) :: %{
           token: Token.t(),
           active_usage: TokenUsage.t() | nil
@@ -55,6 +104,14 @@ defmodule TokenGuard.Tokens do
     %{token: token, active_usage: usage}
   end
 
+@doc """
+  Retrieves the active (ongoing) usage record for a specific token.
+
+  Returns the current usage session for the token, or nil if no active session exists.
+
+  ## Parameters
+    * `token_id` - The token ID to find active usage for
+  """
   @spec get_active_usage_for_token(token_id()) :: TokenUsage.t() | nil
   def get_active_usage_for_token(token_id) do
     TokenUsage
@@ -63,6 +120,15 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
+@doc """
+  Retrieves the active (ongoing) token usage record for a specific user.
+
+  Returns the current token session assigned to the user, or nil if the user
+  has no active token.
+
+  ## Parameters
+    * `user_id` - The user ID to find active token usage for
+  """
   @spec get_active_usage_for_user(user_id()) :: TokenUsage.t() | nil
   def get_active_usage_for_user(user_id) do
     TokenUsage
@@ -71,6 +137,15 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
+@doc """
+  Retrieves the complete usage history for a token.
+
+  Returns all past and present usage records for the token, sorted by
+  start time in descending order (most recent first).
+
+  ## Parameters
+    * `token_id` - The token ID to retrieve history for
+  """
   @spec get_token_history(token_id()) :: [TokenUsage.t()]
   def get_token_history(token_id) do
     TokenUsage
@@ -248,6 +323,13 @@ defmodule TokenGuard.Tokens do
     end
   end
 
+  @doc """
+  Releases all currently active tokens back to available status.
+
+  Transitions all tokens with active status back to available and marks
+  all associated usage records as ended. Returns the count of tokens released.
+  Useful for administrative operations like maintenance or system resets.
+  """
   @spec release_all_active_tokens() :: non_neg_integer()
   def release_all_active_tokens do
     now = DateTime.utc_now(:second)
@@ -283,13 +365,31 @@ defmodule TokenGuard.Tokens do
   end
 
   @doc """
-  Creates the default number of tokens.
+  Creates the default number of tokens and adds them to the database.
+
+  Uses the `@default_token_count` module attribute to determine how many
+  tokens to create. All tokens are created with `:available` status.
+
+  ## Returns
+    * A tuple `{count, nil}` where count is the number of tokens created.
   """
   @spec create_default_tokens() :: {non_neg_integer(), [any()]}
   def create_default_tokens do
     create_tokens(@default_token_count)
   end
 
+  @doc """
+  Creates the specified number of tokens and adds them to the database.
+
+  Batch inserts multiple tokens with `:available` status. This is more efficient
+  than creating tokens individually for bulk token generation.
+
+  ## Parameters
+    * `count` - The number of tokens to create
+
+  ## Returns
+    * A tuple `{count, nil}` where count is the number of tokens successfully created.
+  """
   @spec create_tokens(non_neg_integer()) :: {non_neg_integer(), [any()]}
   def create_tokens(count) do
     now = DateTime.utc_now(:second)
