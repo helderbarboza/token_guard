@@ -138,6 +138,7 @@ defmodule TokenGuard.Tokens do
     |> where(status: :available)
     |> order_by(asc: :inserted_at)
     |> limit(1)
+    |> lock("FOR UPDATE SKIP LOCKED")
     |> Repo.one()
   end
 
@@ -173,8 +174,12 @@ defmodule TokenGuard.Tokens do
     |> where(status: :active)
     |> order_by(asc: :inserted_at)
     |> limit(1)
+    |> lock("FOR UPDATE SKIP LOCKED")
     |> Repo.one()
-    |> release_token()
+    |> case do
+      nil -> nil
+      token -> release_token(token)
+    end
   end
 
   @doc """
