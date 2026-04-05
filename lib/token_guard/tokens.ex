@@ -9,7 +9,6 @@ defmodule TokenGuard.Tokens do
   alias TokenGuard.Tokens.Token
   alias TokenGuard.Tokens.TokenUsage
 
-  @token_lifetime Application.compile_env(:token_guard, :token_lifetime, :timer.minutes(2))
   @default_token_count 100
 
   @type token_id :: binary()
@@ -212,7 +211,8 @@ defmodule TokenGuard.Tokens do
   @spec release_expired_tokens() :: :ok
   def release_expired_tokens do
     now = DateTime.utc_now(:second)
-    deadline = DateTime.add(DateTime.utc_now(), -@token_lifetime, :millisecond)
+    token_lifetime = Application.get_env(:token_guard, :token_lifetime, :timer.minutes(2))
+    deadline = DateTime.add(DateTime.utc_now(), -token_lifetime, :millisecond)
 
     {token_count, nil} =
       Token
