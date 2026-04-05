@@ -51,6 +51,15 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
       assert json_response(conn, 422) == %{"errors" => %{"user_id" => ["must be a valid UUID"]}}
     end
 
+    test "returns error when no tokens available", %{conn: conn} do
+      Tokens.release_all_active_tokens()
+      TokenGuard.Repo.delete_all(TokenGuard.Tokens.Token)
+
+      conn = post(conn, ~p"/api/tokens/register", user_id: Ecto.UUID.generate())
+
+      assert json_response(conn, 422) == %{"errors" => %{"token" => ["no_tokens_available"]}}
+    end
+
     test "101st activation reuses oldest token via FIFO", %{conn: conn} do
       for _user_idx <- 1..100 do
         {:ok, _activation} = Tokens.activate_token(Ecto.UUID.generate())
