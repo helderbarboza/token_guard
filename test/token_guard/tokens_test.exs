@@ -1,5 +1,5 @@
 defmodule TokenGuard.TokensTest do
-  use TokenGuard.DataCase, async: false
+  use TokenGuard.DataCase, async: true
 
   alias TokenGuard.Repo
   alias TokenGuard.Tokens
@@ -89,7 +89,7 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "activating multiple tokens uses FIFO order" do
-# Get the first two available tokens to verify FIFO ordering
+      # Get the first two available tokens to verify FIFO ordering
       available_before = Tokens.list_available_tokens()
       first_available = Enum.at(available_before, 0)
       second_available = Enum.at(available_before, 1)

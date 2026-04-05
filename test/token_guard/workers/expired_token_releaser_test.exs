@@ -1,5 +1,5 @@
 defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
-  use TokenGuard.DataCase, async: false
+  use TokenGuard.DataCase, async: true
 
   import Ecto.Query
 
