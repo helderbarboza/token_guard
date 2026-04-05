@@ -12,7 +12,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
 
   describe "perform/1" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 

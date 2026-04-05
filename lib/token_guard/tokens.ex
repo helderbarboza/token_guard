@@ -10,6 +10,7 @@ defmodule TokenGuard.Tokens do
   alias TokenGuard.Tokens.TokenUsage
 
   @token_lifetime Application.compile_env(:token_guard, :token_lifetime, :timer.minutes(2))
+  @default_token_count 100
 
   @type token_id :: binary()
   @type user_id :: binary()
@@ -243,6 +244,14 @@ defmodule TokenGuard.Tokens do
 
     Logger.info("Admin released all active tokens", released_count: length(active))
     length(active)
+  end
+
+  @doc """
+  Creates the default number of tokens.
+  """
+  @spec create_default_tokens() :: {non_neg_integer(), [any()]}
+  def create_default_tokens do
+    create_tokens(@default_token_count)
   end
 
   @spec create_tokens(non_neg_integer()) :: {non_neg_integer(), [any()]}

@@ -5,7 +5,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
   describe "index" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -20,7 +20,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
   describe "register" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -74,7 +74,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
   describe "show" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -120,7 +120,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
   describe "history" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -158,7 +158,7 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
   describe "clear" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 

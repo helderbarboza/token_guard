@@ -14,6 +14,6 @@ alias TokenGuard.Tokens
 
 IO.puts("Creating 100 tokens...")
 
-Tokens.create_tokens(100)
+Tokens.create_default_tokens()
 
 IO.puts("Done! Created 100 tokens.")

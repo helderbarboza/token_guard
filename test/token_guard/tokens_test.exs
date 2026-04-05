@@ -7,7 +7,7 @@ defmodule TokenGuard.TokensTest do
 
   describe "token constraints" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -29,7 +29,7 @@ defmodule TokenGuard.TokensTest do
 
   describe "token activation" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -136,7 +136,7 @@ defmodule TokenGuard.TokensTest do
 
   describe "token usage history" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -183,7 +183,7 @@ defmodule TokenGuard.TokensTest do
 
   describe "token release" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
@@ -251,7 +251,7 @@ defmodule TokenGuard.TokensTest do
 
   describe "list operations" do
     setup do
-      Tokens.create_tokens(100)
+      Tokens.create_default_tokens()
       :ok
     end
 
