@@ -151,13 +151,9 @@ defmodule TokenGuard.Tokens do
     |> Ecto.Changeset.change(status: :active)
     |> Repo.update!()
 
-    case Repo.insert(changeset) do
-      {:ok, _usage} ->
-        %{token_id: token.id, user_id: user_id}
+    Repo.insert!(changeset)
 
-      {:error, _changeset} ->
-        Repo.rollback(:user_already_has_active_token)
-    end
+    %{token_id: token.id, user_id: user_id}
   end
 
   defp release_oldest_active_token do
