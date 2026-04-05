@@ -90,6 +90,20 @@ defmodule TokenGuard.Tokens do
   @spec activate_token(user_id()) ::
           {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token(user_id) do
+    result = Repo.transaction(fn -> do_activate_token(user_id) end)
+
+    case result do
+      {:ok, %{token_id: token_id, user_id: _user_id}} ->
+        Logger.info("Token activation successful", token_id: token_id, user_id: user_id)
+        {:ok, %{token_id: token_id, user_id: user_id}}
+
+      {:error, :no_tokens_available} ->
+        Logger.warning("No tokens available for user", user_id: user_id)
+        {:error, :no_tokens_available}
+    end
+  end
+
+  defp do_activate_token(user_id) do
     case get_active_usage_for_user(user_id) do
       %{token_id: existing_token_id} ->
         Logger.info("User already has active token, returning existing",
@@ -97,16 +111,9 @@ defmodule TokenGuard.Tokens do
           token_id: existing_token_id
         )
 
-        {:ok, %{token_id: existing_token_id, user_id: user_id}}
+        %{token_id: existing_token_id, user_id: user_id}
 
       nil ->
-        do_activate_token(user_id)
-    end
-  end
-
-  defp do_activate_token(user_id) do
-    result =
-      Repo.transaction(fn ->
         token = fetch_available_token() || release_oldest_active_token()
 
         if token do
@@ -114,16 +121,6 @@ defmodule TokenGuard.Tokens do
         else
           Repo.rollback(:no_tokens_available)
         end
-      end)
-
-    case result do
-      {:ok, %{token_id: token_id, user_id: ^user_id}} ->
-        Logger.info("Token activated", token_id: token_id, user_id: user_id)
-        {:ok, %{token_id: token_id, user_id: user_id}}
-
-      {:error, :no_tokens_available} ->
-        Logger.warning("No tokens available for user", user_id: user_id)
-        {:error, :no_tokens_available}
     end
   end
 
