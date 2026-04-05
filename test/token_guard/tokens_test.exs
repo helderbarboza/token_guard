@@ -89,13 +89,17 @@ defmodule TokenGuard.TokensTest do
     end
 
     test "activating multiple tokens uses FIFO order" do
-      {:ok, first} = Tokens.activate_token(Ecto.UUID.generate())
-      {:ok, second} = Tokens.activate_token(Ecto.UUID.generate())
+# Get the first two available tokens to verify FIFO ordering
+      available_before = Tokens.list_available_tokens()
+      first_available = Enum.at(available_before, 0)
+      second_available = Enum.at(available_before, 1)
 
-      first_usage = Tokens.get_active_usage_for_token(first.token_id)
-      second_usage = Tokens.get_active_usage_for_token(second.token_id)
+      {:ok, first_activation} = Tokens.activate_token(Ecto.UUID.generate())
+      {:ok, second_activation} = Tokens.activate_token(Ecto.UUID.generate())
 
-      assert DateTime.compare(first_usage.started_at, second_usage.started_at) in [:lt, :eq]
+      # Verify we got the expected tokens in FIFO order
+      assert first_activation.token_id == first_available.id
+      assert second_activation.token_id == second_available.id
     end
 
     test "activating 101st token reuses oldest active token via FIFO" do
