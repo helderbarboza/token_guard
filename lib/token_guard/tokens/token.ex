@@ -23,8 +23,8 @@ defmodule TokenGuard.Tokens.Token do
   """
   def changeset(token, attrs) do
     token
-    |> cast(attrs, [:id, :status])
-    |> validate_required([:id, :status])
+    |> cast(attrs, [:status])
+    |> validate_required([:status])
     |> validate_inclusion(:status, @status_values)
   end
 end
