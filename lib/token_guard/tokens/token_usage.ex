@@ -9,7 +9,7 @@ defmodule TokenGuard.Tokens.TokenUsage do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   typed_schema "token_usages" do
-    field :user_id, Ecto.UUID
+    field :user_id, :binary_id
     field :started_at, :utc_datetime
     field :ended_at, :utc_datetime
 
