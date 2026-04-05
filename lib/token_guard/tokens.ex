@@ -137,7 +137,7 @@ defmodule TokenGuard.Tokens do
   end
 
   defp activate_token_record(token, user_id) do
-    now = DateTime.utc_now(:second)
+    now = DateTime.utc_now()
 
     attrs = %{
       token_id: token.id,
