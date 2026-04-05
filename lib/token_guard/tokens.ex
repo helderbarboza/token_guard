@@ -145,16 +145,14 @@ defmodule TokenGuard.Tokens do
   defp activate_token_record(token, user_id) do
     now = DateTime.utc_now(:second)
 
-    changeset =
-      TokenUsage.changeset(
-        %TokenUsage{
-          id: generate_uuid(),
-          token_id: token.id,
-          user_id: user_id,
-          started_at: now
-        },
-        %{}
-      )
+    attrs = %{
+      id: generate_uuid(),
+      token_id: token.id,
+      user_id: user_id,
+      started_at: now
+    }
+
+    changeset = TokenUsage.changeset(%TokenUsage{}, attrs)
 
     token
     |> Ecto.Changeset.change(status: :active)
