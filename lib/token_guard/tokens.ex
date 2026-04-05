@@ -205,24 +205,37 @@ defmodule TokenGuard.Tokens do
     token_lifetime = Application.get_env(:token_guard, :token_lifetime, :timer.minutes(2))
     deadline = DateTime.add(DateTime.utc_now(), -token_lifetime, :millisecond)
 
-    {token_count, nil} =
-      Token
-      |> join(:inner, [t], u in TokenUsage, on: t.id == u.token_id and is_nil(u.ended_at))
-      |> where([t, u], u.started_at <= ^deadline)
-      |> where(status: :active)
-      |> Repo.update_all(set: [status: :available])
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update_all(
+        :update_tokens,
+        Token
+        |> join(:inner, [t], u in TokenUsage, on: t.id == u.token_id and is_nil(u.ended_at))
+        |> where([t, u], u.started_at <= ^deadline)
+        |> where(status: :active),
+        set: [status: :available]
+      )
+      |> Ecto.Multi.update_all(
+        :update_usages,
+        TokenUsage
+        |> join(:inner, [u], t in Token, on: t.id == u.token_id and t.status == :available)
+        |> where([u, t], u.started_at <= ^deadline and is_nil(u.ended_at)),
+        set: [ended_at: now]
+      )
 
-    {usage_count, nil} =
-      TokenUsage
-      |> join(:inner, [u], t in Token, on: t.id == u.token_id and t.status == :available)
-      |> where([u, t], u.started_at <= ^deadline and is_nil(u.ended_at))
-      |> Repo.update_all(set: [ended_at: now])
+    case Repo.transaction(multi) do
+      {:ok, %{update_tokens: {token_count, nil}, update_usages: {usage_count, nil}}} ->
+        Logger.info("Expired tokens released",
+          token_count: token_count,
+          usage_count: usage_count,
+          deadline: deadline
+        )
 
-    Logger.info("Expired tokens released",
-      token_count: token_count,
-      usage_count: usage_count,
-      deadline: deadline
-    )
+      {:error, _operation, _changeset, _changes} ->
+        Logger.error("Failed to release expired tokens")
+    end
+
+    :ok
   end
 
   @spec release_all_active_tokens() :: non_neg_integer()
