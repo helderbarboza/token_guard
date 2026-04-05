@@ -305,7 +305,7 @@ defmodule TokenGuard.Tokens do
         Ecto.Multi.new()
         |> Ecto.Multi.update_all(
           :update_tokens,
-          where(Token, [t], t.id in ^expired_usage_ids and t.status == :active),
+          where(Token, [t], t.id in ^expired_usage_ids),
           set: [status: :available]
         )
         |> Ecto.Multi.update_all(
