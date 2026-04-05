@@ -34,7 +34,9 @@ config :logger, :default_formatter,
     :released_count,
     :expired_count,
     :deadline,
-    :errors
+    :errors,
+    :token_count,
+    :usage_count
   ]
 
 # Use Jason for JSON parsing in Phoenix

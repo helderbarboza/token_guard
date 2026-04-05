@@ -192,12 +192,7 @@ defmodule TokenGuard.Tokens do
     TokenUsage
     |> where(token_id: ^token.id)
     |> where([u], is_nil(u.ended_at))
-    |> Repo.all()
-    |> Enum.each(fn usage ->
-      usage
-      |> Ecto.Changeset.change(ended_at: now)
-      |> Repo.update!()
-    end)
+    |> Repo.update_all(set: [ended_at: now])
 
     Logger.info("Token released", token_id: token.id)
     token
@@ -210,21 +205,25 @@ defmodule TokenGuard.Tokens do
   """
   @spec release_expired_tokens() :: :ok
   def release_expired_tokens do
+    now = DateTime.utc_now(:second)
     deadline = DateTime.add(DateTime.utc_now(), -@token_lifetime, :millisecond)
 
-    expired_tokens =
+    {token_count, nil} =
       Token
       |> join(:inner, [t], u in TokenUsage, on: t.id == u.token_id and is_nil(u.ended_at))
       |> where([t, u], u.started_at <= ^deadline)
-      |> select([t, u], t)
-      |> Repo.all()
+      |> where(status: :active)
+      |> Repo.update_all(set: [status: :available])
 
-    Enum.each(expired_tokens, fn token ->
-      release_token(token)
-    end)
+    {usage_count, nil} =
+      TokenUsage
+      |> join(:inner, [u], t in Token, on: t.id == u.token_id and t.status == :available)
+      |> where([u, t], u.started_at <= ^deadline and is_nil(u.ended_at))
+      |> Repo.update_all(set: [ended_at: now])
 
-    Logger.info("Expired tokens check completed",
-      expired_count: length(expired_tokens),
+    Logger.info("Expired tokens released",
+      token_count: token_count,
+      usage_count: usage_count,
       deadline: deadline
     )
   end
