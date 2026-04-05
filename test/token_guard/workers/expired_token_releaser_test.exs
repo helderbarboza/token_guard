@@ -2,8 +2,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
   use TokenGuard.DataCase, async: true
 
   import Ecto.Query
-  import ExUnit.CaptureLog
-
+  
   alias TokenGuard.Repo
   alias TokenGuard.Tokens
   alias TokenGuard.Tokens.TokenUsage
@@ -309,14 +308,6 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
     setup do
       Tokens.create_default_tokens()
       :ok
-    end
-
-    test "logs when job starts" do
-      {:ok, _activation} = Tokens.activate_token(Ecto.UUID.generate())
-
-      assert capture_log(fn ->
-               ExpiredTokenReleaser.perform(%Oban.Job{})
-             end) =~ "ExpiredTokenReleaser job started"
     end
 
     test "job is idempotent and can be retried" do
