@@ -117,13 +117,15 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     test "returns 404 for non-existent token", %{conn: conn} do
       conn = get(conn, ~p"/api/tokens/00000000-0000-0000-0000-000000000000")
 
-      assert json_response(conn, 404) == %{"error" => "Token not found"}
+      assert json_response(conn, 404) == %{"errors" => %{"id" => ["Token not found"]}}
     end
 
     test "returns 400 for invalid UUID format", %{conn: conn} do
       conn = get(conn, ~p"/api/tokens/invalid-token-id")
 
-      assert json_response(conn, 400) == %{"error" => "Invalid token ID format"}
+      assert json_response(conn, 400) == %{
+               "errors" => %{"id" => ["Invalid token ID format"]}
+             }
     end
   end
 
@@ -155,13 +157,15 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
     test "returns 404 for non-existent token", %{conn: conn} do
       conn = get(conn, ~p"/api/tokens/00000000-0000-0000-0000-000000000000/history")
 
-      assert json_response(conn, 404) == %{"error" => "Token not found"}
+      assert json_response(conn, 404) == %{"errors" => %{"id" => ["Token not found"]}}
     end
 
     test "returns 400 for invalid UUID format", %{conn: conn} do
       conn = get(conn, ~p"/api/tokens/invalid-token-id/history")
 
-      assert json_response(conn, 400) == %{"error" => "Invalid token ID format"}
+      assert json_response(conn, 400) == %{
+               "errors" => %{"id" => ["Invalid token ID format"]}
+             }
     end
   end
 

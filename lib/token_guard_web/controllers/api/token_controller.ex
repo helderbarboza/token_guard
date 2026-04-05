@@ -87,12 +87,12 @@ defmodule TokenGuardWeb.API.TokenController do
       :error ->
         conn
         |> put_status(:bad_request)
-        |> json(%{error: "Invalid token ID format"})
+        |> json(%{errors: %{id: ["Invalid token ID format"]}})
 
       {:error, :not_found} ->
         conn
         |> put_status(:not_found)
-        |> json(%{error: "Token not found"})
+        |> json(%{errors: %{id: ["Token not found"]}})
     end
   end
 
@@ -122,12 +122,12 @@ defmodule TokenGuardWeb.API.TokenController do
       :error ->
         conn
         |> put_status(:bad_request)
-        |> json(%{error: "Invalid token ID format"})
+        |> json(%{errors: %{id: ["Invalid token ID format"]}})
 
       {:error, :not_found} ->
         conn
         |> put_status(:not_found)
-        |> json(%{error: "Token not found"})
+        |> json(%{errors: %{id: ["Token not found"]}})
     end
   end
 
