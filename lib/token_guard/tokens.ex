@@ -100,6 +100,14 @@ defmodule TokenGuard.Tokens do
       {:error, :no_tokens_available} ->
         Logger.warning("No tokens available for user", user_id: user_id)
         {:error, :no_tokens_available}
+
+      {:error, reason} ->
+        Logger.error("Unexpected token activation error",
+          user_id: user_id,
+          reason: inspect(reason)
+        )
+
+        {:error, :unexpected_error}
     end
   end
 
