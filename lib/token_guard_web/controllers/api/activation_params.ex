@@ -12,10 +12,15 @@ defmodule TokenGuardWeb.API.ActivationParams do
     %__MODULE__{}
     |> cast(params, [:user_id])
     |> validate_required(:user_id, message: "is required")
-    |> validate_format(
-      :user_id,
-      ~r/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
-      message: "must be a valid UUID"
-    )
+    |> validate_uuid_format()
+  end
+
+  defp validate_uuid_format(changeset) do
+    validate_change(changeset, :user_id, fn :user_id, value ->
+      case Ecto.UUID.cast(value) do
+        {:ok, _uuid} -> []
+        :error -> [user_id: "must be a valid UUID"]
+      end
+    end)
   end
 end
