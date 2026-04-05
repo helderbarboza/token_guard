@@ -6,6 +6,7 @@ defmodule TokenGuardWeb.API.TokenController do
   use TokenGuardWeb, :controller
   require Logger
 
+  alias TokenGuard.ErrorHelpers
   alias TokenGuard.Tokens
   alias TokenGuardWeb.API.ActivationParams
 
@@ -40,21 +41,13 @@ defmodule TokenGuardWeb.API.TokenController do
           |> json(%{error: Atom.to_string(reason)})
       end
     else
-      errors = transform_errors(changeset)
+      errors = ErrorHelpers.transform_errors(changeset)
       Logger.warning("Token activation validation failed", errors: errors)
 
       conn
       |> put_status(:unprocessable_entity)
       |> json(%{errors: errors})
     end
-  end
-
-  defp transform_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-      Regex.replace(~r"%{(\w+)}", msg, fn _match, key ->
-        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-      end)
-    end)
   end
 
   @doc """

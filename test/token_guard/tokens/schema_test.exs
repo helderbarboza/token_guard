@@ -1,6 +1,7 @@
 defmodule TokenGuard.Tokens.SchemaTest do
   use TokenGuard.DataCase, async: true
 
+  alias TokenGuard.ErrorHelpers
   alias TokenGuard.Tokens.Token
   alias TokenGuard.Tokens.TokenUsage
 
@@ -43,12 +44,6 @@ defmodule TokenGuard.Tokens.SchemaTest do
   end
 
   defp changeset_errors(changeset) do
-    Ecto.Changeset.traverse_errors(changeset, fn {message, opts} ->
-      Regex.replace(~r"%{(\w+)}", message, fn _whole_match, key ->
-        opts
-        |> Keyword.get(String.to_existing_atom(key), key)
-        |> to_string()
-      end)
-    end)
+    ErrorHelpers.transform_errors(changeset)
   end
 end
