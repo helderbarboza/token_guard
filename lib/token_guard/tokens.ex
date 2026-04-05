@@ -174,17 +174,18 @@ defmodule TokenGuard.Tokens do
   def release_token(token) do
     now = DateTime.utc_now(:second)
 
-    token
-    |> Ecto.Changeset.change(status: :available)
-    |> Repo.update!()
+    {:ok, updated_token} =
+      token
+      |> Ecto.Changeset.change(status: :available)
+      |> Repo.update()
 
     TokenUsage
-    |> where(token_id: ^token.id)
+    |> where(token_id: ^updated_token.id)
     |> where([u], is_nil(u.ended_at))
     |> Repo.update_all(set: [ended_at: now])
 
-    Logger.info("Token released", token_id: token.id)
-    token
+    Logger.info("Token released", token_id: updated_token.id)
+    updated_token
   end
 
   @doc """

@@ -116,9 +116,9 @@ defmodule TokenGuard.TokensTest do
 
       {:ok, result} = Tokens.activate_token(Ecto.UUID.generate())
 
-      assert result.token_id != nil
+      assert result.token_id == oldest_before.id
       oldest_after = Tokens.get_token!(oldest_before.id)
-      assert oldest_after.status == :available
+      assert oldest_after.status == :active
     end
 
     test "activating 101st token releases oldest active token" do
@@ -134,7 +134,7 @@ defmodule TokenGuard.TokensTest do
       {:ok, _result} = Tokens.activate_token(Ecto.UUID.generate())
 
       old_token = Tokens.get_token!(oldest_id)
-      assert old_token.status == :available
+      assert old_token.status == :active
     end
   end
 

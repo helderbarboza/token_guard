@@ -69,19 +69,21 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
         {:ok, _activation} = Tokens.activate_token(Ecto.UUID.generate())
       end
 
-      assert length(Tokens.list_active_tokens()) == 100
+      active_tokens = Tokens.list_active_tokens()
 
-      oldest_before = List.first(Tokens.list_active_tokens())
+      assert length(active_tokens) == 100
+
+      oldest_before = List.first(active_tokens)
 
       new_user_id = Ecto.UUID.generate()
       conn = post(conn, ~p"/api/tokens/register", user_id: new_user_id)
 
       response = json_response(conn, 200)
-      assert is_binary(response["token_id"])
-      assert is_binary(response["user_id"])
+      assert response["token_id"] == oldest_before.id
+      assert response["user_id"] == new_user_id
 
       oldest_after = Tokens.get_token!(oldest_before.id)
-      assert oldest_after.status == :available
+      assert oldest_after.status == :active
     end
   end
 
