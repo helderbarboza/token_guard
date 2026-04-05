@@ -20,9 +20,6 @@ config :token_guard, TokenGuardWeb.Endpoint,
   secret_key_base: "XfNrEGISJW6rP7iqE4UafJNO8O6ONJScq0h05z8baBXqij9DCuauT/ubJb4gf0d+",
   server: false
 
-# Disable logger in test
-config :logger, :default_handler, false
-
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
 
