@@ -28,7 +28,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
       |> where(token_id: ^activation.token_id)
       |> Repo.update_all(set: [started_at: expired_time])
 
-      assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
+      assert {:ok, _result} = ExpiredTokenReleaser.perform(%Oban.Job{})
 
       updated_token = Tokens.get_token!(activation.token_id)
       assert updated_token.status == :available
@@ -40,7 +40,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
 
       assert token.status == :active
 
-      assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
+      assert {:ok, _result} = ExpiredTokenReleaser.perform(%Oban.Job{})
 
       updated_token = Tokens.get_token!(activation.token_id)
       assert updated_token.status == :active
@@ -59,7 +59,7 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaserTest do
         |> Repo.update_all(set: [started_at: expired_time])
       end
 
-      assert :ok = ExpiredTokenReleaser.perform(%Oban.Job{})
+      assert {:ok, _result} = ExpiredTokenReleaser.perform(%Oban.Job{})
 
       active_tokens = Tokens.list_active_tokens()
       assert active_tokens == []

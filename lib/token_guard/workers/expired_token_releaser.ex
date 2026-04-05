@@ -10,6 +10,5 @@ defmodule TokenGuard.Workers.ExpiredTokenReleaser do
   def perform(_job) do
     Logger.info("ExpiredTokenReleaser job started")
     TokenGuard.Tokens.release_expired_tokens()
-    :ok
   end
 end

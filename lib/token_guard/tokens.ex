@@ -192,43 +192,51 @@ defmodule TokenGuard.Tokens do
   and releases them. Called periodically by the background worker to enforce
   automatic token expiration.
   """
-  @spec release_expired_tokens() :: :ok
+  @spec release_expired_tokens() ::
+          {:ok, %{token_count: non_neg_integer(), usage_count: non_neg_integer()}}
+          | {:error, term()}
   def release_expired_tokens do
     now = DateTime.utc_now(:second)
     token_lifetime = Application.get_env(:token_guard, :token_lifetime, :timer.minutes(2))
     deadline = DateTime.add(DateTime.utc_now(), -token_lifetime, :millisecond)
 
-    multi =
-      Ecto.Multi.new()
-      |> Ecto.Multi.update_all(
-        :update_tokens,
-        Token
-        |> join(:inner, [t], u in TokenUsage, on: t.id == u.token_id and is_nil(u.ended_at))
-        |> where([t, u], u.started_at <= ^deadline)
-        |> where(status: :active),
-        set: [status: :available]
-      )
-      |> Ecto.Multi.update_all(
-        :update_usages,
-        TokenUsage
-        |> join(:inner, [u], t in Token, on: t.id == u.token_id and t.status == :available)
-        |> where([u, t], u.started_at <= ^deadline and is_nil(u.ended_at)),
-        set: [ended_at: now]
-      )
+    expired_usage_ids =
+      TokenUsage
+      |> where([u], is_nil(u.ended_at) and u.started_at <= ^deadline)
+      |> select([u], u.token_id)
+      |> Repo.all()
 
-    case Repo.transaction(multi) do
-      {:ok, %{update_tokens: {token_count, nil}, update_usages: {usage_count, nil}}} ->
-        Logger.info("Expired tokens released",
-          token_count: token_count,
-          usage_count: usage_count,
-          deadline: deadline
+    if Enum.empty?(expired_usage_ids) do
+      {:ok, %{token_count: 0, usage_count: 0}}
+    else
+      multi =
+        Ecto.Multi.new()
+        |> Ecto.Multi.update_all(
+          :update_tokens,
+          where(Token, [t], t.id in ^expired_usage_ids and t.status == :active),
+          set: [status: :available]
+        )
+        |> Ecto.Multi.update_all(
+          :update_usages,
+          where(TokenUsage, [u], is_nil(u.ended_at) and u.started_at <= ^deadline),
+          set: [ended_at: now]
         )
 
-      {:error, _operation, _changeset, _changes} ->
-        Logger.error("Failed to release expired tokens")
-    end
+      case Repo.transaction(multi) do
+        {:ok, %{update_tokens: {token_count, nil}, update_usages: {usage_count, nil}}} ->
+          Logger.info("Expired tokens released",
+            token_count: token_count,
+            usage_count: usage_count,
+            deadline: deadline
+          )
 
-    :ok
+          {:ok, %{token_count: token_count, usage_count: usage_count}}
+
+        {:error, _operation, reason, _changes} ->
+          Logger.error("Failed to release expired tokens", reason: inspect(reason))
+          {:error, reason}
+      end
+    end
   end
 
   @spec release_all_active_tokens() :: non_neg_integer()
