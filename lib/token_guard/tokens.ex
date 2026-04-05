@@ -38,7 +38,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
-@doc """
+  @doc """
   Retrieves all tokens with active status.
 
   Returns a list of tokens sorted by insertion time, representing tokens
@@ -52,7 +52,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.all()
   end
 
-@doc """
+  @doc """
   Retrieves a token by ID, raising an error if not found.
 
   ## Parameters
@@ -66,7 +66,7 @@ defmodule TokenGuard.Tokens do
     Repo.get!(Token, id)
   end
 
-@doc """
+  @doc """
   Retrieves a token by ID, returning nil if not found.
 
   ## Parameters
@@ -80,7 +80,7 @@ defmodule TokenGuard.Tokens do
     Repo.get(Token, id)
   end
 
-@doc """
+  @doc """
   Retrieves a token along with its active usage record if one exists.
 
   ## Parameters
@@ -104,7 +104,7 @@ defmodule TokenGuard.Tokens do
     %{token: token, active_usage: usage}
   end
 
-@doc """
+  @doc """
   Retrieves the active (ongoing) usage record for a specific token.
 
   Returns the current usage session for the token, or nil if no active session exists.
@@ -120,7 +120,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
-@doc """
+  @doc """
   Retrieves the active (ongoing) token usage record for a specific user.
 
   Returns the current token session assigned to the user, or nil if the user
@@ -137,7 +137,7 @@ defmodule TokenGuard.Tokens do
     |> Repo.one()
   end
 
-@doc """
+  @doc """
   Retrieves the complete usage history for a token.
 
   Returns all past and present usage records for the token, sorted by
@@ -197,13 +197,17 @@ defmodule TokenGuard.Tokens do
         %{token_id: existing_token_id, user_id: user_id}
 
       nil ->
-        token = fetch_available_token() || release_oldest_active_token()
+        acquire_and_activate_token(user_id)
+    end
+  end
 
-        if token do
-          activate_token_record(token, user_id)
-        else
-          Repo.rollback(:no_tokens_available)
-        end
+  defp acquire_and_activate_token(user_id) do
+    token = fetch_available_token() || release_oldest_active_token()
+
+    if token do
+      activate_token_record(token, user_id)
+    else
+      Repo.rollback(:no_tokens_available)
     end
   end
 
@@ -218,22 +222,26 @@ defmodule TokenGuard.Tokens do
 
   defp activate_token_record(token, user_id) do
     now = DateTime.utc_now()
+    update_token_status(token)
+    create_token_usage_record(token.id, user_id, now)
+    %{token_id: token.id, user_id: user_id}
+  end
 
-    attrs = %{
-      token_id: token.id,
-      user_id: user_id,
-      started_at: now
-    }
-
-    changeset = TokenUsage.changeset(%TokenUsage{}, attrs)
-
+  defp update_token_status(token) do
     token
     |> Ecto.Changeset.change(status: :active)
     |> Repo.update!()
+  end
 
+  defp create_token_usage_record(token_id, user_id, started_at) do
+    attrs = %{
+      token_id: token_id,
+      user_id: user_id,
+      started_at: started_at
+    }
+
+    changeset = TokenUsage.changeset(%TokenUsage{}, attrs)
     Repo.insert!(changeset)
-
-    %{token_id: token.id, user_id: user_id}
   end
 
   defp release_oldest_active_token do
@@ -243,10 +251,10 @@ defmodule TokenGuard.Tokens do
     |> limit(1)
     |> lock("FOR UPDATE SKIP LOCKED")
     |> Repo.one()
-    |> case do
+    |> then(fn
       nil -> nil
       token -> release_token(token)
-    end
+    end)
   end
 
   @doc """
