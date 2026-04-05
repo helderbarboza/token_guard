@@ -13,6 +13,8 @@ defmodule TokenGuard.ErrorHelpers do
   @doc """
   Maps internal error atoms to user-friendly error messages.
   """
-  def error_message(:no_tokens_available), do: "No tokens are currently available. Please try again later."
+  def error_message(:no_tokens_available),
+    do: "No tokens are currently available. Please try again later."
+
   def error_message(_reason), do: "An unexpected error occurred. Please try again."
 end
