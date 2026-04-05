@@ -6,7 +6,7 @@ defmodule TokenGuard.Tokens.TokenUsage do
   use TypedEctoSchema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: false}
+  @primary_key {:id, :binary_id, autogenerate: true}
 
   typed_schema "token_usages" do
     field :user_id, Ecto.UUID
@@ -23,7 +23,7 @@ defmodule TokenGuard.Tokens.TokenUsage do
   """
   def changeset(token_usage, attrs) do
     token_usage
-    |> cast(attrs, [:id, :token_id, :user_id, :started_at, :ended_at])
-    |> validate_required([:id, :token_id, :user_id, :started_at])
+    |> cast(attrs, [:token_id, :user_id, :started_at, :ended_at])
+    |> validate_required([:token_id, :user_id, :started_at])
   end
 end

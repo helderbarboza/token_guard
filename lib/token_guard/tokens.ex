@@ -14,12 +14,6 @@ defmodule TokenGuard.Tokens do
   @type token_id :: binary()
   @type user_id :: binary()
 
-  @doc """
-  Generates a new UUID string for token/usage IDs.
-  """
-  @spec generate_uuid() :: binary()
-  def generate_uuid, do: UUID.uuid4()
-
   @spec list_tokens() :: [Token.t()]
   def list_tokens do
     Repo.all(Token)
@@ -146,7 +140,6 @@ defmodule TokenGuard.Tokens do
     now = DateTime.utc_now(:second)
 
     attrs = %{
-      id: generate_uuid(),
       token_id: token.id,
       user_id: user_id,
       started_at: now
@@ -259,7 +252,6 @@ defmodule TokenGuard.Tokens do
     tokens =
       for _n <- 1..count do
         %{
-          id: generate_uuid(),
           status: :available,
           inserted_at: now,
           updated_at: now

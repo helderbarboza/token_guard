@@ -6,7 +6,7 @@ defmodule TokenGuard.Tokens.Token do
   use TypedEctoSchema
   import Ecto.Changeset
 
-  @primary_key {:id, :binary_id, autogenerate: false}
+  @primary_key {:id, :binary_id, autogenerate: true}
 
   @status_values [:available, :active]
 

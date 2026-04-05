@@ -63,7 +63,6 @@ defmodule TokenGuard.MixProject do
       {:bandit, "~> 1.5"},
       {:oban, "~> 2.0"},
       {:oban_web, "~> 2.0"},
-      {:uuid, "~> 1.1"},
       {:typed_ecto_schema, "~> 0.4"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
