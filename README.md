@@ -40,6 +40,23 @@ TokenGuard is a **token pool management API** that manages a pool of pre-generat
 - Erlang/OTP 26+
 - PostgreSQL 14+
 
+### Using asdf (Recommended)
+
+This project includes a `.tool-versions` file for managing Elixir, Erlang, and Node.js versions with [asdf](https://asdf-vm.com/):
+
+1. Install asdf (if not already installed)
+2. Install the required plugins:
+   ```bash
+   asdf plugin add elixir
+   asdf plugin add erlang
+   asdf plugin add nodejs
+   ```
+3. Install the specified versions:
+   ```bash
+   asdf install
+   ```
+4. The versions will be automatically set for this project directory
+
 ### Installation
 
 1. **Install all dependencies and setup the project:**
@@ -92,6 +109,10 @@ iex -S mix phx.server
 ### Activate a Token (`POST /api/tokens/register`)
 
 Register a user and receive an allocated token. If the user already has an active token, returns that existing token (does not create a new one).
+
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -159,19 +180,27 @@ sequenceDiagram
         API-->>Client: 200 OK<br/>{"token_id": "...", "user_id": "..."}
     end
 ```
+</details>
 
-**Request:**
+#### Request
 
-```http
-POST /api/tokens/register
-Content-Type: application/json
+##### Path Parameters
+*No path parameters*
 
-{
-  "user_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-}
-```
+##### Query Parameters
+*No query parameters*
 
-**Response:**
+##### Headers
+| Header       | Value            | Required |
+| ------------ | ---------------- | -------- |
+| Content-Type | application/json | Yes      |
+
+##### Body
+| Parameter | Type          | Required | Description                   |
+| --------- | ------------- | -------- | ----------------------------- |
+| user_id   | string (UUID) | Yes      | Unique identifier of the user |
+
+#### Response (Success)
 
 ```json
 {
@@ -180,11 +209,18 @@ Content-Type: application/json
 }
 ```
 
+#### Response (Error)
+- 422 Unprocessable Entity: Invalid user_id format
+
 ---
 
 ### List All Tokens (`GET /api/tokens`)
 
 Get the status of all tokens in the pool.
+
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -209,14 +245,23 @@ sequenceDiagram
     
     API-->>Client: 200 OK<br/>{"tokens": [...]}
 ```
+</details>
 
-**Request:**
+#### Request
 
-```http
-GET /api/tokens
-```
+##### Path Parameters
+*No path parameters*
 
-**Response:**
+##### Query Parameters
+*No query parameters*
+
+##### Headers
+| Header | Value            | Required |
+| ------ | ---------------- | -------- |
+| Accept | application/json | Yes      |
+
+
+#### Response (Success)
 
 ```json
 {
@@ -237,11 +282,17 @@ GET /api/tokens
 }
 ```
 
+#### Response (Error)
+*No specific errors beyond standard HTTP errors*
+
 ---
 
 ### Get Token Details (`GET /api/tokens/:id`)
 
 Retrieve details for a specific token, including active user if any.
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -275,14 +326,25 @@ sequenceDiagram
     
     API-->>Client: 200 OK<br/>{"id": "...", "status": "active", "active_user": {...}, ...}
 ```
+</details>
 
-**Request:**
+#### Request
 
-```http
-GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479
-```
+##### Path Parameters
+| Parameter | Type          | Required | Description                    |
+| --------- | ------------- | -------- | ------------------------------ |
+| id        | string (UUID) | Yes      | Unique identifier of the token |
 
-**Response (available token):**
+##### Query Parameters
+*No query parameters*
+
+##### Headers
+| Header | Value            | Required |
+| ------ | ---------------- | -------- |
+| Accept | application/json | Yes      |
+
+
+#### Response (Success - Available Token)
 
 ```json
 {
@@ -294,7 +356,7 @@ GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479
 }
 ```
 
-**Response (active token):**
+#### Response (Success - Active Token)
 
 ```json
 {
@@ -309,11 +371,18 @@ GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479
 }
 ```
 
+#### Response (Error)
+- 400 Bad Request: Invalid token ID format
+- 404 Not Found: Token not found
+
 ---
 
 ### Get Token History (`GET /api/tokens/:id/history`)
 
 View the usage history for a specific token.
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -346,14 +415,26 @@ sequenceDiagram
     
     API-->>Client: 200 OK<br/>{"history": [...]}
 ```
+</details>
 
-**Request:**
 
-```http
-GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479/history
-```
+#### Request
 
-**Response:**
+##### Path Parameters
+| Parameter | Type          | Required | Description                    |
+| --------- | ------------- | -------- | ------------------------------ |
+| id        | string (UUID) | Yes      | Unique identifier of the token |
+
+##### Query Parameters
+*No query parameters*
+
+##### Headers
+| Header | Value            | Required |
+| ------ | ---------------- | -------- |
+| Accept | application/json | Yes      |
+
+
+#### Response (Success)
 
 ```json
 {
@@ -372,11 +453,18 @@ GET /api/tokens/f47ac10b-58cc-4372-a567-0e02b2c3d479/history
 }
 ```
 
+#### Response (Error)
+- 400 Bad Request: Invalid token ID format
+- 404 Not Found: Token not found
+
 ---
 
 ### Release All Active Tokens (`DELETE /api/tokens/active`)
 
 Immediately release all active tokens (admin operation).
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -415,14 +503,23 @@ sequenceDiagram
     Tokens->>API: 3
     API-->>Admin: 200 OK<br/>{"message": "3 token(s) released", "released_count": 3}
 ```
+</details>
 
-**Request:**
+#### Request
 
-```http
-DELETE /api/tokens/active
-```
+##### Path Parameters
+*No path parameters*
 
-**Response:**
+##### Query Parameters
+*No query parameters*
+
+##### Headers
+| Header | Value            | Required |
+| ------ | ---------------- | -------- |
+| Accept | application/json | Yes      |
+
+
+#### Response (Success)
 
 ```json
 {
@@ -431,7 +528,7 @@ DELETE /api/tokens/active
 }
 ```
 
-**Response (no active tokens):**
+#### Response (Success - No Active Tokens)
 
 ```json
 {
@@ -439,6 +536,9 @@ DELETE /api/tokens/active
   "released_count": 0
 }
 ```
+
+#### Response (Error)
+*No specific errors beyond standard HTTP errors*
 
 ## Configuration
 
@@ -456,6 +556,9 @@ config :token_guard,
 Or in `config/dev.exs` / `config/prod.exs` for environment-specific values.
 
 ### Token Lifecycle
+
+<details>
+<summary>↗️ View Diagram</summary>
 
 ```mermaid
 sequenceDiagram
@@ -500,6 +603,7 @@ sequenceDiagram
     Pool->>Pool: Release all active tokens
     Note over Pool: 100 available, 0 active
 ```
+</details>
 
 ### Pool Size
 
