@@ -240,14 +240,36 @@ defmodule TokenGuard.Tokens do
 
   @spec release_all_active_tokens() :: non_neg_integer()
   def release_all_active_tokens do
-    active = list_active_tokens()
+    now = DateTime.utc_now(:second)
 
-    Enum.each(active, fn token ->
-      release_token(token)
-    end)
+    multi =
+      Ecto.Multi.new()
+      |> Ecto.Multi.update_all(
+        :update_tokens,
+        where(Token, status: :active),
+        set: [status: :available]
+      )
+      |> Ecto.Multi.update_all(
+        :update_usages,
+        TokenUsage
+        |> join(:inner, [u], t in Token, on: t.id == u.token_id and t.status == :available)
+        |> where([u, t], is_nil(u.ended_at)),
+        set: [ended_at: now]
+      )
 
-    Logger.info("Admin released all active tokens", released_count: length(active))
-    length(active)
+    case Repo.transaction(multi) do
+      {:ok, %{update_tokens: {token_count, nil}, update_usages: {usage_count, nil}}} ->
+        Logger.info("Admin released all active tokens",
+          token_count: token_count,
+          usage_count: usage_count
+        )
+
+        token_count
+
+      {:error, _operation, _changeset, _changes} ->
+        Logger.error("Failed to release all active tokens")
+        0
+    end
   end
 
   @doc """
