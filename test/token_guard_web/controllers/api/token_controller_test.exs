@@ -57,7 +57,11 @@ defmodule TokenGuardWeb.API.TokenControllerTest do
 
       conn = post(conn, ~p"/api/tokens/register", user_id: Ecto.UUID.generate())
 
-      assert json_response(conn, 422) == %{"errors" => %{"token" => ["No tokens are currently available. Please try again later."]}}
+      assert json_response(conn, 422) == %{
+               "errors" => %{
+                 "token" => ["No tokens are currently available. Please try again later."]
+               }
+             }
     end
 
     test "101st activation reuses oldest token via FIFO", %{conn: conn} do
