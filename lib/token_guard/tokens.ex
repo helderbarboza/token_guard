@@ -90,7 +90,7 @@ defmodule TokenGuard.Tokens do
   @spec activate_token(user_id()) ::
           {:ok, %{token_id: token_id(), user_id: user_id()}} | {:error, atom()}
   def activate_token(user_id) do
-    result = Repo.transaction(fn -> do_activate_token(user_id) end)
+    result = Repo.transaction(fn -> perform_activation(user_id) end)
 
     case result do
       {:ok, %{token_id: token_id, user_id: _user_id}} ->
@@ -103,7 +103,7 @@ defmodule TokenGuard.Tokens do
     end
   end
 
-  defp do_activate_token(user_id) do
+  defp perform_activation(user_id) do
     case get_active_usage_for_user(user_id) do
       %{token_id: existing_token_id} ->
         Logger.info("User already has active token, returning existing",
