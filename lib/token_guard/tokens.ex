@@ -81,30 +81,6 @@ defmodule TokenGuard.Tokens do
   end
 
   @doc """
-  Retrieves a token along with its active usage record if one exists.
-
-  ## Parameters
-    * `token_id` - The token ID to retrieve
-
-  ## Returns
-    * A map containing:
-      * `:token` - The token struct
-      * `:active_usage` - The active `TokenUsage` record, or `nil` if no active usage exists
-
-  ## Raises
-    * Raises `Ecto.NoResultsError` if the token does not exist.
-  """
-  @spec get_token_with_active_usage(token_id()) :: %{
-          token: Token.t(),
-          active_usage: TokenUsage.t() | nil
-        }
-  def get_token_with_active_usage(token_id) do
-    token = Repo.get!(Token, token_id)
-    usage = get_active_usage_for_token(token_id)
-    %{token: token, active_usage: usage}
-  end
-
-  @doc """
   Retrieves the active (ongoing) usage record for a specific token.
 
   Returns the current usage session for the token, or nil if no active session exists.
