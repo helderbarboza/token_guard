@@ -38,7 +38,7 @@ defmodule TokenGuardWeb.API.TokenController do
 
           conn
           |> put_status(:unprocessable_entity)
-          |> json(%{error: Atom.to_string(reason)})
+          |> json(%{errors: %{token: [Atom.to_string(reason)]}})
       end
     else
       errors = ErrorHelpers.transform_errors(changeset)
