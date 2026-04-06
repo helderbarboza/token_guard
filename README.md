@@ -124,60 +124,69 @@ sequenceDiagram
     participant Repo as Ecto Repo
     participant DB as PostgreSQL
 
-    Client->>API: POST /api/tokens/register<br/>{"user_id": "uuid"}
+    Client->>+API: POST /api/tokens/register<br/>{"user_id": "uuid"}
     
     API->>API: Validate ActivationParams<br/>(check UUID format)
     
     alt Invalid user_id
-        API->>Client: 422 Unprocessable Entity<br/>{"errors": {"user_id": [...]}}
+        API->>-Client: 422 Unprocessable Entity<br/>{"errors": {"user_id": [...]}}
     end
     
-    API->>Tokens: activate_token(user_id)
+		activate API
+    API->>+Tokens: activate_token(user_id)
     
     rect rgba(200, 230, 200, 0.3)
         Note over Repo,DB: Check if user already has active token
-        Tokens->>Repo: SELECT * FROM token_usages<br/>WHERE user_id = ?<br/>AND ended_at IS NULL
-        Repo->>DB: Query
-        DB->>Repo: Existing usage or nil
+        Tokens->>+Repo: SELECT * FROM token_usages<br/>WHERE user_id = ?<br/>AND ended_at IS NULL
+        Repo->>+DB: Query
+        DB-->>-Repo: Existing usage or nil
+        Repo-->>-Tokens: Existing usage or nil
     end
     
     alt User already has active token
         Note over Tokens: Return existing token (no new usage record)
-        Tokens-->>API: {:ok, %{token_id: existing_token_id, user_id}}
-        API-->>Client: 200 OK<br/>{"token_id": "existing_token", "user_id": "..."}
+        Tokens-->>-API: {:ok, %{token_id: existing_token_id, user_id}}
+        API-->>-Client: 200 OK<br/>{"token_id": "existing_token", "user_id": "..."}
     else No active token for user
-        Tokens->>Repo: transaction(fn)
+				activate API
+				activate Tokens
         
         rect rgba(200, 230, 200, 0.3)
             Note over Repo,DB: Fetch available token
-            Tokens->>Repo: SELECT available tokens<br/>ORDER BY inserted_at LIMIT 1
-            Repo->>DB: Query
-            DB->>Repo: First available token
-            Repo->>Tokens: Token struct
+            Tokens->>+Repo: SELECT available tokens<br/>ORDER BY inserted_at LIMIT 1
+            Repo->>+DB: Query
+            DB-->>-Repo: First available token
+            Repo->>-Tokens: Token struct
         end
         
         alt No available tokens
             Note over Tokens: Release oldest active token (FIFO)
-            Tokens->>Repo: SELECT active tokens<br/>ORDER BY inserted_at LIMIT 1
-            Repo->>DB: Query
-            DB->>Repo: Oldest active token
+            Tokens->>+Repo: SELECT active tokens<br/>ORDER BY inserted_at LIMIT 1
+            Repo->>+DB: Query
+            DB-->>-Repo: Oldest active token
             Tokens->>Tokens: release_token(oldest)
             Tokens->>Repo: UPDATE token status = available
+            Repo->>+DB: Update
+            DB-->>-Repo: OK
             Tokens->>Repo: UPDATE usage ended_at = now
-            Tokens->>Repo: commit
+            Repo->>+DB: Update
+            DB-->>-Repo: OK
+            Repo->>-Tokens: Committed
         end
         
         rect rgba(200, 220, 255, 0.3)
             Note over Repo,DB: Activate token
-            Tokens->>Repo: UPDATE token status = active
-            Repo->>DB: Update
+            Tokens->>+Repo: UPDATE token status = active
+            Repo->>+DB: Update
+            DB-->>-Repo: OK
             Tokens->>Repo: INSERT token_usage record
-            Repo->>DB: Insert
+            Repo->>+DB: Insert
+            DB-->>-Repo: OK
         end
         
-        Repo-->>Tokens: %{token_id, user_id}
-        Tokens-->>API: {:ok, result}
-        API-->>Client: 200 OK<br/>{"token_id": "...", "user_id": "..."}
+        Repo-->>-Tokens: %{token_id, user_id}
+        Tokens-->>-API: {:ok, result}
+        API-->>-Client: 200 OK<br/>{"token_id": "...", "user_id": "..."}
     end
 ```
 </details>
@@ -230,18 +239,18 @@ sequenceDiagram
     participant Repo as Ecto Repo
     participant DB as PostgreSQL
 
-    Client->>API: GET /api/tokens
+    Client->>+API: GET /api/tokens
     
-    API->>Tokens: list_tokens()
-    Tokens->>Repo: Repo.all(Token)
-    Repo->>DB: SELECT * FROM tokens
-    DB->>Repo: [100 tokens]
-    Repo->>Tokens: [tokens]
-    Tokens->>API: [tokens]
+    API->>+Tokens: list_tokens()
+    Tokens->>+Repo: Repo.all(Token)
+    Repo->>+DB: SELECT * FROM tokens
+    DB-->>-Repo: [100 tokens]
+    Repo-->>-Tokens: [tokens]
+    Tokens-->>-API: [tokens]
     
     API->>API: Map tokens to response format
     
-    API-->>Client: 200 OK<br/>{"tokens": [...]}
+    API-->>-Client: 200 OK<br/>{"tokens": [...]}
 ```
 </details>
 
@@ -300,27 +309,27 @@ sequenceDiagram
     participant Repo as Ecto Repo
     participant DB as PostgreSQL
 
-    Client->>API: GET /api/tokens/:id
+    Client->>+API: GET /api/tokens/:id
     
-    API->>Tokens: get_token_by_id(id)
-    Tokens->>Repo: Repo.get(Token, id)
-    Repo->>DB: SELECT * FROM tokens WHERE id = ?
-    DB->>Repo: Token struct or nil
-    Repo->>Tokens: Token or nil
-    Tokens->>API: Token or nil
+    API->>+Tokens: get_token_by_id(id)
+    Tokens->>+Repo: Repo.get(Token, id)
+    Repo->>+DB: SELECT * FROM tokens WHERE id = ?
+    DB-->>-Repo: Token struct or nil
+    Repo-->>-Tokens: Token or nil
     
     alt Token not found
-        API-->>Client: 404 Not Found<br/>{"error": "Token not found"}
+        Tokens-->>-API: nil
+        API-->>-Client: 404 Not Found<br/>{"error": "Token not found"}
+    else Token found
+				activate Tokens
+				activate API
+        Tokens->>+Repo: get_active_usage_for_token(id)
+        Repo->>+DB: SELECT * FROM token_usages<br/>WHERE token_id = ?<br/>AND ended_at IS NULL
+        DB-->>-Repo: Active usage or nil
+        Repo-->>-Tokens: TokenUsage or nil
+        Tokens-->>-API: TokenUsage or nil
+        API-->>-Client: 200 OK<br/>{"id": "...", "status": "active", "active_user": {...}, ...}
     end
-    
-    API->>Tokens: get_active_usage_for_token(id)
-    Tokens->>Repo: SELECT * FROM token_usages<br/>WHERE token_id = ?<br/>AND ended_at IS NULL
-    Repo->>DB: Query
-    DB->>Repo: Active usage or nil
-    Repo->>Tokens: TokenUsage or nil
-    Tokens->>API: TokenUsage or nil
-    
-    API-->>Client: 200 OK<br/>{"id": "...", "status": "active", "active_user": {...}, ...}
 ```
 </details>
 
@@ -388,26 +397,29 @@ sequenceDiagram
     participant Repo as Ecto Repo
     participant DB as PostgreSQL
 
-    Client->>API: GET /api/tokens/:id/history
+    Client->>+API: GET /api/tokens/:id/history
     
-    API->>Tokens: get_token_by_id(id)
-    Tokens->>Repo: Repo.get(Token, id)
-    Repo->>DB: SELECT * FROM tokens WHERE id = ?
-    DB->>Repo: Token or nil
-    Tokens->>API: Token or nil
+    API->>+Tokens: get_token_by_id(id)
+    Tokens->>+Repo: Repo.get(Token, id)
+    Repo->>+DB: SELECT * FROM tokens WHERE id = ?
+    DB-->>-Repo: Token or nil
+    Repo-->>-Tokens: Token or nil
+    Tokens-->>API: Token or nil
     
     alt Token not found
-        API-->>Client: 404 Not Found
+        Tokens-->>-API: nil
+        API-->>-Client: 404 Not Found
+    else Token found
+				activate API
+				activate Client
+				activate Tokens
+        Tokens->>+Repo: get_token_history(id)
+        Repo->>+DB: SELECT * FROM token_usages<br/>WHERE token_id = ?<br/>ORDER BY started_at DESC
+        DB-->>-Repo: [usage1, usage2, ...]
+        Repo-->>-Tokens: [usage_records]
+        Tokens-->>-API: [usage_records]
+        API-->>-Client: 200 OK<br/>{"history": [...]}
     end
-    
-    API->>Tokens: get_token_history(id)
-    Tokens->>Repo: SELECT * FROM token_usages<br/>WHERE token_id = ?<br/>ORDER BY started_at DESC
-    Repo->>DB: Query
-    DB->>Repo: [usage1, usage2, ...]
-    Repo->>Tokens: [usage_records]
-    Tokens->>API: [usage_records]
-    
-    API-->>Client: 200 OK<br/>{"history": [...]}
 ```
 </details>
 
@@ -468,32 +480,29 @@ sequenceDiagram
     participant Repo as Ecto Repo
     participant DB as PostgreSQL
 
-    Admin->>API: DELETE /api/tokens/active
+    Admin->>+API: DELETE /api/tokens/active
     
-    API->>Tokens: release_all_active_tokens()
+    API->>+Tokens: release_all_active_tokens()
     
-    Tokens->>Tokens: list_active_tokens()
-    Tokens->>Repo: SELECT * FROM tokens<br/>WHERE status = 'active'
-    Repo->>DB: Query
-    DB->>Repo: [token1, token2, token3]
-    Repo->>Tokens: [active_tokens]
+    Tokens->>Repo: Ecto.Multi transaction
     
-    loop For each active token
-        Tokens->>Tokens: release_token(token)
-        
-        Tokens->>Repo: UPDATE tokens<br/>SET status = 'available'
-        Repo->>DB: Update
-        
-        Tokens->>Repo: SELECT * FROM token_usages<br/>WHERE token_id = ?<br/>AND ended_at IS NULL
-        Repo->>DB: Query
-        DB->>Repo: [usage]
-        
-        Tokens->>Repo: UPDATE token_usages<br/>SET ended_at = now
-        Repo->>DB: Update
+    rect rgba(200, 230, 200, 0.3)
+        Note over Repo,DB: Bulk update all active tokens
+        Tokens->>Repo: UPDATE tokens<br/>SET status = 'available'<br/>WHERE status = 'active'
+        Repo->>+DB: Update
+        DB->>-Repo: {token_count, nil}
     end
     
-    Tokens->>API: 3
-    API-->>Admin: 200 OK<br/>{"message": "3 token(s) released", "released_count": 3}
+    rect rgba(200, 220, 255, 0.3)
+        Note over Repo,DB: Bulk update all active usages via JOIN
+        Tokens->>+Repo: UPDATE token_usages<br/>SET ended_at = now<br/>FROM tokens<br/>WHERE tokens.id = token_usages.token_id<br/>AND tokens.status = 'available'<br/>AND token_usages.ended_at IS NULL
+        Repo->>+DB: Update
+        DB->>-Repo: {usage_count, nil}
+    end
+    
+    Repo->>-Tokens: {:ok, %{update_tokens: {count, nil}, update_usages: {_, nil}}}
+    Tokens->>-API: token_count
+    API-->>-Admin: 200 OK<br/>{"message": "3 token(s) released", "released_count": 3}
 ```
 </details>
 
@@ -552,39 +561,44 @@ sequenceDiagram
 
     Note over Pool: 100 available tokens
 
-    User1->>Pool: POST /api/tokens/register (user1_id)
+    User1->>+Pool: POST /api/tokens/register (user1_id)
     Pool->>Pool: Allocate token-001 to user1
     Note over Pool: 99 available, 1 active
+    Pool-->>-User1: token-001 allocated
 
-    User2->>Pool: POST /api/tokens/register (user2_id)
+    User2->>+Pool: POST /api/tokens/register (user2_id)
     Pool->>Pool: Allocate token-002 to user2
     Note over Pool: 98 available, 2 active
+    Pool-->>-User2: token-002 allocated
 
-    User1->>Pool: POST /api/tokens/register (user1_id)
+    User1->>+Pool: POST /api/tokens/register (user1_id)
     Pool->>Pool: Check for existing token
     Note over Pool: User1 already has token-001
-    Pool-->>User1: Return token-001 (existing)
+    Pool-->>-User1: Return token-001 (existing)
     Note over Pool: 98 available, 2 active (no change)
 
-    User1->>Pool: GET /api/tokens/token-001
-    Pool-->>User1: {"status": "active", "user_id": user1}
+    User1->>+Pool: GET /api/tokens/token-001
+    Pool-->>-User1: {"status": "active", "user_id": user1}
 
-    User1->>Pool: GET /api/tokens/token-001/history
-    Pool-->>User1: {"history": [{"user_id": user1_id, "started_at": ...}]}
+    User1->>+Pool: GET /api/tokens/token-001/history
+    Pool-->>-User1: {"history": [{"user_id": user1_id, "started_at": ...}]}
 
     Note over Timer: 2 minutes pass...
 
-    Timer->>Pool: release_expired_tokens()
+    Timer->>+Pool: release_expired_tokens()
     Pool->>Pool: Release token-001<br/>Release token-002
     Note over Pool: 100 available, 0 active
+    Pool-->>-Timer: Done
 
-    User1->>Pool: POST /api/tokens/register (user1_id)
+    User1->>+Pool: POST /api/tokens/register (user1_id)
     Pool->>Pool: Allocate token-001 to user1
     Note over Pool: 99 available, 1 active
+    Pool-->>-User1: token-001 allocated
 
-    User2->>Pool: DELETE /api/tokens/active
+    User2->>+Pool: DELETE /api/tokens/active
     Pool->>Pool: Release all active tokens
     Note over Pool: 100 available, 0 active
+    Pool-->>-User2: All tokens released
 ```
 </details>
 
